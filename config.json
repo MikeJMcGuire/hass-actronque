@@ -17,27 +17,14 @@
     "MQTTUser": "mqttuser",
     "MQTTPassword": "mqttpassword",
     "MQTTBroker": "core-mosquitto",
-    "Zones": [
-      {
-        "Name": "Zone 1",
-        "Id": 1
-      },
-      {
-        "Name": "Zone 2",
-        "Id": 2
-      }
-    ]
+    "QueUser": "queuser",
+    "QuePassword": "quepassword"
   },
   "schema": {
     "MQTTUser": "str?",
     "MQTTPassword": "str?",
     "MQTTBroker": "str",
-    "RegisterZoneTemperatures": "bool?",
-    "Zones": [
-      {
-        "Name": "str",
-        "Id": "int"
-      }
-    ]
+    "QueUser": "str?",
+    "QuePassword": "str?"
   }
 }
