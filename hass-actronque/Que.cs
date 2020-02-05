@@ -41,21 +41,18 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Que.Que()");
 
-			httpClientHandler = new HttpClientHandler();
-			httpClientHandler.Proxy = null;
-			httpClientHandler.UseProxy = false;
+			if (httpClientHandler.SupportsAutomaticDecompression)
+				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
 
 			_httpClientAuth = new HttpClient(httpClientHandler);
 
 			_httpClientAuth.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-
-			httpClientHandler = new HttpClientHandler();
-			httpClientHandler.Proxy = null;
-			httpClientHandler.UseProxy = false;
+			_httpClientAuth.BaseAddress = new Uri(_strQueBaseURL);
 
 			_httpClient = new HttpClient(httpClientHandler);
 
 			_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
+			_httpClient.BaseAddress = new Uri(_strQueBaseURL);
 		}
 
 		public static void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iZoneCount, ManualResetEvent eventStop)
@@ -106,13 +103,13 @@ namespace HMX.HASSActronQue
 				cancellationToken = new CancellationTokenSource();
 				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-				httpResponse = await _httpClientAuth.PostAsync(_strQueBaseURL + strPageURL, new FormUrlEncodedContent(dtFormContent), cancellationToken.Token);
+				httpResponse = await _httpClientAuth.PostAsync(strPageURL, new FormUrlEncodedContent(dtFormContent), cancellationToken.Token);
 
 				if (httpResponse.IsSuccessStatusCode)
 				{
 					strResponse = await httpResponse.Content.ReadAsStringAsync();
 
-					Logging.WriteDebugLog("Que.GeneratePairingToken() [0x{0}] Responded", lRequestId.ToString("X8"));
+					Logging.WriteDebugLog("Que.GeneratePairingToken() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), httpResponse.Content.Headers.ContentLength);
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
@@ -170,13 +167,13 @@ namespace HMX.HASSActronQue
 				cancellationToken = new CancellationTokenSource();
 				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-				httpResponse = await _httpClientAuth.PostAsync(_strQueBaseURL + strPageURL, new FormUrlEncodedContent(dtFormContent), cancellationToken.Token);
+				httpResponse = await _httpClientAuth.PostAsync(strPageURL, new FormUrlEncodedContent(dtFormContent), cancellationToken.Token);
 
 				if (httpResponse.IsSuccessStatusCode)
 				{
 					strResponse = await httpResponse.Content.ReadAsStringAsync();
 
-					Logging.WriteDebugLog("Que.GenerateBearerToken() [0x{0}] Responded", lRequestId.ToString("X8"));
+					Logging.WriteDebugLog("Que.GenerateBearerToken() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), httpResponse.Content.Headers.ContentLength);
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
@@ -290,13 +287,13 @@ namespace HMX.HASSActronQue
 				cancellationToken = new CancellationTokenSource();
 				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-				httpResponse = await _httpClient.GetAsync(_strQueBaseURL + strPageURL + _strSerialNumber, cancellationToken.Token);
+				httpResponse = await _httpClient.GetAsync(strPageURL + _strSerialNumber, cancellationToken.Token);
 
 				if (httpResponse.IsSuccessStatusCode)
 				{
 					strResponse = await httpResponse.Content.ReadAsStringAsync();
 
-					Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Responded", lRequestId.ToString("X8"));
+					Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), httpResponse.Content.Headers.ContentLength);
 
 					Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Response: {1}", lRequestId.ToString("X8"), strResponse);
 
