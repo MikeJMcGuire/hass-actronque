@@ -298,6 +298,8 @@ namespace HMX.HASSActronQue
 
 					Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Responded", lRequestId.ToString("X8"));
 
+					Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Response: {1}", lRequestId.ToString("X8"), strResponse);
+
 					airConditionerData.LastUpdated = DateTime.Now;
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
@@ -561,6 +563,10 @@ namespace HMX.HASSActronQue
 
 				case "COOL":
 					MQTT.SendMessage("actron/aircon/compressor", "cooling");
+					break;
+
+				case "OFF":
+					MQTT.SendMessage("actron/aircon/compressor", "off");
 					break;
 
 				case "IDLE":
