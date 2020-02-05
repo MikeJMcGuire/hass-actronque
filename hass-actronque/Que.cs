@@ -638,10 +638,7 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("homeassistant/switch/actronque/airconzone{0}/config", iZone), "{{\"name\":\"{0} Zone\",\"state_topic\":\"actronque/zone{1}\",\"command_topic\":\"actronque/zone{1}/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{2}/status\"}}", _airConditionerData.Zones[iZone].Name, iZone, Service.ServiceName.ToLower());
 				MQTT.Subscribe("actronque/zone{0}/set", iZone);
 
-				/*if (_bRegisterZoneTemperatures)
-					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque/airconzone{0}/config", iZone), "{{\"name\":\"{0}\",\"state_topic\":\"actron/aircon/zone{1}/temperature\",\"unit_of_measurement\":\"\u00B0C\",\"availability_topic\":\"{2}/status\"}}", AirConditioner.Zones[iZone].Name, iZone, _strServiceName.ToLower());
-				else
-					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque/airconzone{0}/config", iZone), "{{}}"); // Clear existing devices*/
+				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque/airconzone{0}/config", iZone), "{{\"name\":\"{0}\",\"state_topic\":\"actronque/zone{1}/temperature\",\"unit_of_measurement\":\"\u00B0C\",\"availability_topic\":\"{2}/status\"}}", _airConditionerData.Zones[iZone].Name, iZone, Service.ServiceName.ToLower());
 			}
 
 			MQTT.Subscribe("actronque/mode/set");
@@ -714,7 +711,10 @@ namespace HMX.HASSActronQue
 
 			// Zones
 			foreach (int iIndex in _airConditionerData.Zones.Keys)
+			{
 				MQTT.SendMessage(string.Format("actronque/zone{0}", iIndex), _airConditionerData.Zones[iIndex].State ? "ON" : "OFF");
+				MQTT.SendMessage(string.Format("actronque/zone{0}/temperature", iIndex), _airConditionerData.Zones[iIndex].Temperature.ToString());
+			}
 
 			// Compressor
 			switch (_airConditionerData.CompressorState)
@@ -744,6 +744,7 @@ namespace HMX.HASSActronQue
 					break;
 			}
 		}
+
 
 		private static double GetSetTemperature()
 		{
