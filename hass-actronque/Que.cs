@@ -337,6 +337,8 @@ namespace HMX.HASSActronQue
 
 					Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Next Event URL: {1}", lRequestId.ToString("X8"), _strNextEventURL);
 
+					Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Procesing {1} events", lRequestId.ToString("X8"), jsonResponse.events.Count);
+
 					for (int iEvent = jsonResponse.events.Count - 1; iEvent >= 0; iEvent--)
 					{
 						strEventType = jsonResponse.events[iEvent].type;
@@ -779,6 +781,26 @@ namespace HMX.HASSActronQue
 			}
 
 			return dblSetTemperature;
-		}		
+		}
+		
+		public static async void ChangeZone(long lRequestId, int iZone, bool bState)
+		{
+			Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] State: {1}", lRequestId.ToString("X8"), bState ? "On" : "Off");
+		}
+
+		public static async void ChangeMode(long lRequestId, AirConditionerMode mode)
+		{
+			Logging.WriteDebugLog("Que.ChangeMode() [0x{0}] State: {1}", lRequestId.ToString("X8"), mode.ToString());
+		}
+
+		public static async void ChangeFanMode(long lRequestId, FanMode fanMode)
+		{
+			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] State: {1}", lRequestId.ToString("X8"), fanMode.ToString());
+		}
+
+		public static async void ChangeTemperature(long lRequestId, double dblTemperature)
+		{
+			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] State: {1}", lRequestId.ToString("X8"), dblTemperature);
+		}
 	}
 }
