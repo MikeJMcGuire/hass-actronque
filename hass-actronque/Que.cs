@@ -483,8 +483,6 @@ namespace HMX.HASSActronQue
 
 		private static void MQTTUpdateData()
 		{
-			double dblSetTemperature;
-
 			Logging.WriteDebugLog("Que.MQTTUpdateData()");
 
 			// Fan Mode
@@ -511,7 +509,10 @@ namespace HMX.HASSActronQue
 					break;
 			}
 
-			// Power and Mode
+			// Temperature
+			MQTT.SendMessage("actronque/temperature", _airConditionerData.Temperature.ToString("N1"));
+
+			// Power, Mode & Set Temperature
 			if (!_airConditionerData.On)
 				MQTT.SendMessage("actronque/mode", "off");
 			else
@@ -520,14 +521,17 @@ namespace HMX.HASSActronQue
 				{
 					case "AUTO":
 						MQTT.SendMessage("actronque/mode", "auto");
+						MQTT.SendMessage("actronque/settemperature", GetSetTemperature().ToString("N1"));
 						break;
 
 					case "COOL":
 						MQTT.SendMessage("actronque/mode", "cool");
+						MQTT.SendMessage("actronque/settemperature", _airConditionerData.SetTemperatureCooling.ToString("N1"));
 						break;
 
 					case "HEAT":
 						MQTT.SendMessage("actronque/mode", "heat");
+						MQTT.SendMessage("actronque/settemperature", _airConditionerData.SetTemperatureHeating.ToString("N1"));
 						break;
 
 					case "FAN":
@@ -539,16 +543,6 @@ namespace HMX.HASSActronQue
 						break;
 				}
 			}
-
-			// Temperature
-			MQTT.SendMessage("actronque/temperature", _airConditionerData.Temperature.ToString("N1"));
-
-			// Set Temperature
-			dblSetTemperature = _airConditionerData.SetTemperatureHeating + ((_airConditionerData.SetTemperatureCooling - _airConditionerData.SetTemperatureHeating) / 2);
-
-			dblSetTemperature = Math.Round(dblSetTemperature * 2, MidpointRounding.AwayFromZero) / 2;
-
-			MQTT.SendMessage("actronque/settemperature", dblSetTemperature.ToString("N1"));
 
 			// Zones
 			foreach (int iIndex in _airConditionerData.Zones.Keys)
@@ -582,5 +576,25 @@ namespace HMX.HASSActronQue
 					break;
 			}
 		}
+
+		private static double GetSetTemperature()
+		{
+			double dblSetTemperature = 0.0;
+			
+			Logging.WriteDebugLog("Que.GetSetTemperature()");
+
+			try
+			{
+				dblSetTemperature = _airConditionerData.SetTemperatureHeating + ((_airConditionerData.SetTemperatureCooling - _airConditionerData.SetTemperatureHeating) / 2);
+
+				dblSetTemperature = Math.Round(dblSetTemperature * 2, MidpointRounding.AwayFromZero) / 2;
+			}
+			catch (Exception eException)
+			{
+				Logging.WriteDebugLogError("Que.GetSetTemperature()", eException, "Unable to determine set temperature mid-point.");
+			}
+
+			return dblSetTemperature;
+		}		
 	}
 }
