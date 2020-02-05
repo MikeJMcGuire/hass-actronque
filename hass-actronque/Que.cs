@@ -16,6 +16,8 @@ namespace HMX.HASSActronQue
 		private static string _strBaseUserAgent = "nxgen-ios/1214 CFNetwork/976 Darwin/18.2.0";
 		private static string _strDeviceName = "TestClient";
 		private static string _strAirConditionerName = "Que Air Conditioner";
+		private static string _strPairingTokenFile = "/data/pairingtoken.json";
+		private static string _strBearerTokenFile = "/data/bearertoken.json";
 		private static string _strDeviceUniqueIdentifier = "1111";
 		private static string _strQueUser, _strQuePassword, _strSerialNumber;
 		private static HttpClient _httpClient = null, _httpClientAuth = null;
@@ -114,6 +116,16 @@ namespace HMX.HASSActronQue
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
 					_pairingToken = new PairingToken(jsonResponse.pairingToken.ToString());
+
+					// Update Token File
+					try
+					{
+						File.WriteAllText(_strPairingTokenFile, JsonConvert.SerializeObject(_pairingToken));
+					}
+					catch (Exception eException)
+					{
+						Logging.WriteDebugLogError("Que.GeneratePairingToken()", eException, "Unable to update json file.");
+					}
 				}
 				else
 				{
@@ -182,6 +194,16 @@ namespace HMX.HASSActronQue
 					queToken.TokenExpires = DateTime.Now.AddSeconds(int.Parse(jsonResponse.expires_in.ToString()));
 
 					_queToken = queToken;
+
+					// Update Token File
+					try
+					{
+						File.WriteAllText(_strBearerTokenFile, JsonConvert.SerializeObject(_queToken));
+					}
+					catch (Exception eException)
+					{
+						Logging.WriteDebugLogError("Que.GenerateBearerToken()", eException, "Unable to update json file.");
+					}
 				}
 				else
 				{
