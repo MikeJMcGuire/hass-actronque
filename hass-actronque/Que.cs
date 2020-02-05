@@ -558,22 +558,22 @@ namespace HMX.HASSActronQue
 			switch (_airConditionerData.CompressorState)
 			{
 				case "HEAT":
-					MQTT.SendMessage("actron/aircon/compressor", "heating");
+					MQTT.SendMessage("actronque/compressor", "heating");
 					break;
 
 				case "COOL":
-					MQTT.SendMessage("actron/aircon/compressor", "cooling");
+					MQTT.SendMessage("actronque/compressor", "cooling");
 					break;
 
 				case "OFF":
-					MQTT.SendMessage("actron/aircon/compressor", "off");
+					MQTT.SendMessage("actronque/compressor", "off");
 					break;
 
 				case "IDLE":
 					if (_airConditionerData.On)
-						MQTT.SendMessage("actron/aircon/compressor", "idle");
+						MQTT.SendMessage("actronque/compressor", "idle");
 					else
-						MQTT.SendMessage("actron/aircon/compressor", "off");
+						MQTT.SendMessage("actronque/compressor", "off");
 
 					break;
 
