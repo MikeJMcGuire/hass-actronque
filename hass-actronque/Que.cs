@@ -519,19 +519,19 @@ namespace HMX.HASSActronQue
 				switch (_airConditionerData.Mode)
 				{
 					case "AUTO":
-						MQTT.SendMessage("actronque/fanmode", "auto");
+						MQTT.SendMessage("actronque/mode", "auto");
 						break;
 
 					case "COOL":
-						MQTT.SendMessage("actronque/fanmode", "cool");
+						MQTT.SendMessage("actronque/mode", "cool");
 						break;
 
 					case "HEAT":
-						MQTT.SendMessage("actronque/fanmode", "heat");
+						MQTT.SendMessage("actronque/mode", "heat");
 						break;
 
 					case "FAN":
-						MQTT.SendMessage("actronque/fanmode", "fan_only");
+						MQTT.SendMessage("actronque/mode", "fan_only");
 						break;
 
 					default:
