@@ -39,13 +39,13 @@ namespace HMX.HASSActronQue
 			}
 
 			Configuration.GetOptionalConfiguration(configuration, "MQTTUser", out strMQTTUser);
-			Configuration.GetOptionalConfiguration(configuration, "MQTTPassword", out strMQTTPassword);
+			Configuration.GetPrivateOptionalConfiguration(configuration, "MQTTPassword", out strMQTTPassword);
 			if (!Configuration.GetConfiguration(configuration, "MQTTBroker", out strMQTTBroker))
 				return;
 
 			if (!Configuration.GetConfiguration(configuration, "QueUser", out strQueUser))
 				return;
-			if (!Configuration.GetConfiguration(configuration, "QuePassword", out strQuePassword))
+			if (!Configuration.GetPrivateConfiguration(configuration, "QuePassword", out strQuePassword))
 				return;
 			if (!Configuration.GetConfiguration(configuration, "QueSerial", out strQueSerial))
 				return;

@@ -70,6 +70,11 @@ namespace HMX.HASSActronQue
 			return GetConfiguration(configuration, strVariable, out strConfiguration, true, false);
 		}
 
+		public static bool GetPrivateOptionalConfiguration(IConfigurationRoot configuration, string strVariable, out string strConfiguration)
+		{
+			return GetConfiguration(configuration, strVariable, out strConfiguration, true, true);
+		}
+
 		private static bool GetConfiguration(IConfigurationRoot configuration, string strVariable, out string strConfiguration, bool bPrivate, bool bOptional)
 		{
 			Logging.WriteDebugLog("Configuration.GetConfiguration() Read {0}", strVariable);

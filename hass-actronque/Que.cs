@@ -346,6 +346,13 @@ namespace HMX.HASSActronQue
 						Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "lastKnownState.UserAirconSettings.TemperatureSetpoint_Heat_oC");
 						bValid = false;
 					}
+					
+					// Live Temperature
+					if (!double.TryParse(jsonResponse.lastKnownState.MasterInfo.LiveTemp_oC.ToString(), out airConditionerData.Temperature))
+					{
+						Logging.WriteDebugLog("Que.GetAirConditionerState() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "lastKnownState.MasterInfo.LiveTemp_oC");
+						bValid = false;
+					}
 
 					// Zones
 					aEnabledZones = jsonResponse.lastKnownState.UserAirconSettings.EnabledZones;
@@ -428,7 +435,10 @@ namespace HMX.HASSActronQue
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
 						if (await GetAirConditionerState())
+						{
 							MQTTRegister();
+							MQTTUpdateData();
+						}
 
 						break;
 				}
@@ -451,7 +461,7 @@ namespace HMX.HASSActronQue
 		{
 			Logging.WriteDebugLog("Que.MQTTRegister()");
 
-			MQTT.SendMessage("homeassistant/climate/actronque/config", "{{\"name\":\"{1}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\"],\"mode_command_topic\":\"actronque/mode/set\",\"temperature_command_topic\":\"actronque/temperature/set\",\"fan_mode_command_topic\":\"actronque/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actronque/fanmode\",\"action_topic\":\"actronque/compressor\",\"temperature_state_topic\":\"actronque/settemperature\",\"mode_state_topic\":\"actronque/mode\",\"current_temperature_topic\":\"actronque/temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower(), _strAirConditionerName);
+			MQTT.SendMessage("homeassistant/climate/actronque/config", "{{\"name\":\"{1}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\",\"auto\"],\"mode_command_topic\":\"actronque/mode/set\",\"temperature_command_topic\":\"actronque/temperature/set\",\"fan_mode_command_topic\":\"actronque/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actronque/fanmode\",\"action_topic\":\"actronque/compressor\",\"temperature_state_topic\":\"actronque/settemperature\",\"mode_state_topic\":\"actronque/mode\",\"current_temperature_topic\":\"actronque/temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower(), _strAirConditionerName);
 
 			foreach (int iZone in _airConditionerData.Zones.Keys)
 			{
@@ -467,6 +477,104 @@ namespace HMX.HASSActronQue
 			MQTT.Subscribe("actronque/mode/set");
 			MQTT.Subscribe("actronque/fan/set");
 			MQTT.Subscribe("actronque/temperature/set");
+		}
+
+		private static void MQTTUpdateData()
+		{
+			double dblSetTemperature;
+
+			Logging.WriteDebugLog("Que.MQTTUpdateData()");
+
+			// Fan Mode
+			switch (_airConditionerData.FanMode)
+			{
+				case "AUTO":
+					MQTT.SendMessage("actronque/fanmode", "auto");
+					break;
+
+				case "LOW":
+					MQTT.SendMessage("actronque/fanmode", "low");
+					break;
+
+				case "MED":
+					MQTT.SendMessage("actronque/fanmode", "medium");
+					break;
+
+				case "HIGH":
+					MQTT.SendMessage("actronque/fanmode", "high");
+					break;
+
+				default:
+					Logging.WriteDebugLog("Que.MQTTUpdateData() Unexpected Fan Mode: {0}", _airConditionerData.FanMode);
+					break;
+			}
+
+			// Power and Mode
+			if (!_airConditionerData.On)
+				MQTT.SendMessage("actronque/mode", "off");
+			else
+			{
+				switch (_airConditionerData.Mode)
+				{
+					case "AUTO":
+						MQTT.SendMessage("actronque/fanmode", "auto");
+						break;
+
+					case "COOL":
+						MQTT.SendMessage("actronque/fanmode", "cool");
+						break;
+
+					case "HEAT":
+						MQTT.SendMessage("actronque/fanmode", "heat");
+						break;
+
+					case "FAN":
+						MQTT.SendMessage("actronque/fanmode", "fan_only");
+						break;
+
+					default:
+						Logging.WriteDebugLog("Que.MQTTUpdateData() Unexpected Mode: {0}", _airConditionerData.Mode);
+						break;
+				}
+			}
+
+			// Temperature
+			MQTT.SendMessage("actronque/temperature", _airConditionerData.Temperature.ToString("N1"));
+
+			// Set Temperature
+			dblSetTemperature = _airConditionerData.SetTemperatureHeating + ((_airConditionerData.SetTemperatureCooling - _airConditionerData.SetTemperatureHeating) / 2);
+
+			dblSetTemperature = Math.Round(dblSetTemperature * 2, MidpointRounding.AwayFromZero) / 2;
+
+			MQTT.SendMessage("actronque/settemperature", dblSetTemperature.ToString("N1"));
+
+			// Zones
+			foreach (int iIndex in _airConditionerData.Zones.Keys)
+				MQTT.SendMessage(string.Format("actronque/zone{0}", iIndex), _airConditionerData.Zones[iIndex].State ? "ON" : "OFF");
+
+			// Compressor
+			switch (_airConditionerData.CompressorState)
+			{
+				case "HEAT":
+					MQTT.SendMessage("actron/aircon/compressor", "heating");
+					break;
+
+				case "COOL":
+					MQTT.SendMessage("actron/aircon/compressor", "cooling");
+					break;
+
+				case "IDLE":
+					if (_airConditionerData.On)
+						MQTT.SendMessage("actron/aircon/compressor", "idle");
+					else
+						MQTT.SendMessage("actron/aircon/compressor", "off");
+
+					break;
+
+				default:
+					Logging.WriteDebugLog("Que.MQTTUpdateData() Unexpected Compressor State: {0}", _airConditionerData.CompressorState);
+					break;
+			}
 		}
 	}
 }
