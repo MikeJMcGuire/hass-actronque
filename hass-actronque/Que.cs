@@ -37,7 +37,7 @@ namespace HMX.HASSActronQue
 
 		static Que()
 		{
-			HttpClientHandler httpClientHandler = null;
+			HttpClientHandler httpClientHandler = new HttpClientHandler();
 
 			Logging.WriteDebugLog("Que.Que()");
 
