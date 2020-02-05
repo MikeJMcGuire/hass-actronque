@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HMX.HASSActron.Controllers
+namespace HMX.HASSActronQue.Controllers
 {
 	public class InstrumentationController : Controller
 	{
@@ -17,7 +17,7 @@ namespace HMX.HASSActron.Controllers
 			result.ContentType = "text/html";
 			result.StatusCode = 200;
 
-			result.Content = "Last Update from Air Conditioner: " + AirConditioner.LastUpdate;
+			result.Content = "Last Update from Air Conditioner: " + Que.LastUpdate;
 
 			return result;
 		}

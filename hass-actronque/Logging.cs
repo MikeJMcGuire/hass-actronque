@@ -7,31 +7,31 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HMX.HASSActron
+namespace HMX.HASSActronQue
 {
     public class Logging
     {
 		public static void WriteSystemLog(string strFormat, params object[] strParams)
 		{
-			WriteLog(strFormat, strParams);
+			WriteDebugLog(strFormat, strParams);
 		}
 
 		public static void WriteDebugLog(string strFormat, params object[] strParams)
 		{
-			WriteLog(strFormat, strParams);
+			WriteDebugLog(strFormat, strParams);
 		}
 
 		public static void WriteDebugLogError(string strFunction, string strFormat, params object[] strParams)
 		{
-			WriteLog(string.Format("{0} Error: {1}", strFunction, string.Format(strFormat, strParams)));
+			WriteDebugLog(string.Format("{0} Error: {1}", strFunction, string.Format(strFormat, strParams)));
 		}
 
 		public static void WriteDebugLogError(string strFunction, Exception eException, string strFormat, params object[] strParams)
 		{
-			WriteLog(string.Format("{0} Error ({1}): ", strFunction, eException.GetType().ToString()) + strFormat + " " + eException.Message, strParams);
+			WriteDebugLog(string.Format("{0} Error ({1}): ", strFunction, eException.GetType().ToString()) + strFormat + " " + eException.Message, strParams);
 		}
 		
-		private static void WriteLog(string strFormat, params object[] strParams)
+		private static void WriteDebugLog(string strFormat, params object[] strParams)
 		{
 			DateTime dtNow = DateTime.Now;
 			string strLogData, strLogMessage;

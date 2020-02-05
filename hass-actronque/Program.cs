@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace HMX.HASSActron
+namespace HMX.HASSActronQue
 {
     class Program
     {

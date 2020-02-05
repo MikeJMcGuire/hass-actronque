@@ -14,17 +14,21 @@
     "i386"
   ],
   "options": {
-    "MQTTUser": "mqttuser",
-    "MQTTPassword": "mqttpassword",
+    "MQTTUser": "",
+    "MQTTPassword": "",
     "MQTTBroker": "core-mosquitto",
     "QueUser": "queuser",
-    "QuePassword": "quepassword"
+    "QuePassword": "quepassword",
+    "QueSerial": "queserialnumber",
+    "ZoneCount": 8
   },
   "schema": {
     "MQTTUser": "str?",
     "MQTTPassword": "str?",
     "MQTTBroker": "str",
-    "QueUser": "str?",
-    "QuePassword": "str?"
+    "QueUser": "str",
+    "QuePassword": "str",
+    "QueSerial": "str",
+    "ZoneCount": "int(0,8)"
   }
 }

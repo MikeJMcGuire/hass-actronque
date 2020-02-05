@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace HMX.HASSActron
+namespace HMX.HASSActronQue
 {
 	public class ASPNETCoreStartup
 	{

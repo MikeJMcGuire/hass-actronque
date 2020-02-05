@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace HMX.HASSActron
+namespace HMX.HASSActronQue
 {
     public class MQTT
     {

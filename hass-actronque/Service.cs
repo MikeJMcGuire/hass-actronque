@@ -2,28 +2,32 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
+using System.Threading;
 
-namespace HMX.HASSActron
+namespace HMX.HASSActronQue
 {
     internal class Service
     {
-		private static string _strServiceName = "hass-actron";
-		private static string _strDeviceName = "Air Conditioner";
+		private static string _strServiceName = "hass-actronque";
 		private static string _strConfigFile = "/data/options.json";
-		private static bool _bRegisterZoneTemperatures = false;
+		private static ManualResetEvent _eventStop = new ManualResetEvent(false);
 
-		public static bool RegisterZoneTemperatures
+		public static string ServiceName
 		{
-			get { return _bRegisterZoneTemperatures; }
+			get { return _strServiceName; }
 		}
 
 		public static void Start()
         {
 			IConfigurationRoot configuration;
 			IWebHost webHost;
+			string strMQTTUser, strMQTTPassword, strMQTTBroker;
+			string strQueUser, strQuePassword, strQueSerial;
+			int iZoneCount;
 
 			Logging.WriteDebugLog("Service.Start()");
 
+			// Load Configuration
 			try
 			{
 				configuration = new ConfigurationBuilder().AddJsonFile(_strConfigFile, false, true).Build();
@@ -34,15 +38,27 @@ namespace HMX.HASSActron
 				return;
 			}
 
-			bool.TryParse(configuration["RegisterZoneTemperatures"] ?? "false", out _bRegisterZoneTemperatures);
+			Configuration.GetOptionalConfiguration(configuration["MQTTUser"] ?? "", out strMQTTUser);
+			Configuration.GetOptionalConfiguration(configuration["MQTTPassword"] ?? "", out strMQTTPassword);
+			if (!Configuration.GetConfiguration(configuration["MQTTBroker"] ?? "", out strMQTTBroker))
+				return;
 
-			Logging.WriteDebugLog("Service.Start() RegisterZoneTemperatures: {0}", _bRegisterZoneTemperatures);
-		
-			MQTT.StartMQTT(configuration["MQTTBroker"] ?? "core-mosquitto", _strServiceName, configuration["MQTTUser"] ?? "", configuration["MQTTPassword"] ?? "", MQTTProcessor);
+			if (!Configuration.GetConfiguration(configuration["QueUser"] ?? "", out strQueUser))
+				return;
+			if (!Configuration.GetConfiguration(configuration["QuePassword"] ?? "", out strQuePassword))
+				return;
+			if (!Configuration.GetConfiguration(configuration["QueSerial"] ?? "", out strQueSerial))
+				return;
 
-			AirConditioner.Configure(configuration);
+			if (!Configuration.GetConfiguration(configuration["ZoneCount"] ?? "", out iZoneCount) || iZoneCount < 0 || iZoneCount > 8)
+			{
+				Logging.WriteDebugLog("Service.Start() Zone Count must be between 0 and 8 (inclusive)");
+				return;
+			}
+	
+			MQTT.StartMQTT(strMQTTBroker, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
-			MQTTRegister();
+			Que.Initialise(strQueUser, strQuePassword, strQueSerial, iZoneCount, _eventStop);
 
 			try
 			{
@@ -61,29 +77,9 @@ namespace HMX.HASSActron
 		{
 			Logging.WriteDebugLog("Service.Stop()");
 
+			_eventStop.Set();
+
 			MQTT.StopMQTT();
-		}
-
-		private static void MQTTRegister()
-		{
-			Logging.WriteDebugLog("Service.MQTTRegister()");
-
-			MQTT.SendMessage("homeassistant/climate/actronaircon/config", "{{\"name\":\"{1}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\"],\"mode_command_topic\":\"actron/aircon/mode/set\",\"temperature_command_topic\":\"actron/aircon/temperature/set\",\"fan_mode_command_topic\":\"actron/aircon/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actron/aircon/fanmode\",\"action_topic\":\"actron/aircon/compressor\",\"temperature_state_topic\":\"actron/aircon/settemperature\",\"mode_state_topic\":\"actron/aircon/mode\",\"current_temperature_topic\":\"actron/aircon/temperature\",\"availability_topic\":\"{0}/status\"}}", _strServiceName.ToLower(), _strDeviceName);
-
-			foreach (int iZone in AirConditioner.Zones.Keys)
-			{
-				MQTT.SendMessage(string.Format("homeassistant/switch/actron/airconzone{0}/config", iZone), "{{\"name\":\"{0} Zone\",\"state_topic\":\"actron/aircon/zone{1}\",\"command_topic\":\"actron/aircon/zone{1}/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{2}/status\"}}", AirConditioner.Zones[iZone].Name, iZone, _strServiceName.ToLower());
-				MQTT.Subscribe("actron/aircon/zone{0}/set", iZone);
-
-				if (_bRegisterZoneTemperatures)
-					MQTT.SendMessage(string.Format("homeassistant/sensor/actron/airconzone{0}/config", iZone), "{{\"name\":\"{0}\",\"state_topic\":\"actron/aircon/zone{1}/temperature\",\"unit_of_measurement\":\"\u00B0C\",\"availability_topic\":\"{2}/status\"}}", AirConditioner.Zones[iZone].Name, iZone, _strServiceName.ToLower());
-				else
-					MQTT.SendMessage(string.Format("homeassistant/sensor/actron/airconzone{0}/config", iZone), "{{}}"); // Clear existing devices
-			}
-			
-			MQTT.Subscribe("actron/aircon/mode/set");
-			MQTT.Subscribe("actron/aircon/fan/set");
-			MQTT.Subscribe("actron/aircon/temperature/set");
 		}
 
 		private static void MQTTProcessor(string strTopic, string strPayload)

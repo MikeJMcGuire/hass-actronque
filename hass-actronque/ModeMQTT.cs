@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HMX.HASSActron
+namespace HMX.HASSActronQue
 {
-    public enum AirConditionerMode
-    {
-		None = -1,
+	public enum ModeMQTT
+	{
 		Automatic = 0,
-		Heating = 1,
-		Cooling = 2,
-		FanOnly = 3
+		Heat = 1,
+		Cool = 2,
+		Fan_Only = 3
 	}
 }
