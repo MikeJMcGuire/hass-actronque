@@ -26,7 +26,7 @@ namespace HMX.HASSActronQue
 		private static int _iStateRetrievalInterval = 30; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static ManualResetEvent _eventStop;
-		private static ManualResetEvent _eventAuthenticationFailure = new ManualResetEvent(false);
+		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
 		private static PairingToken _pairingToken;
 		private static QueToken _queToken = null;
 		private static AirConditionerData _airConditionerData = null;
@@ -558,7 +558,17 @@ namespace HMX.HASSActronQue
 				}
 				else
 				{
-					Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+					if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+						Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, "Unable to process API response: {0}/{1} - check the Que Serial number.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+					else if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+					{
+						Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+						_eventAuthenticationFailure.Set();
+					}
+					else
+						Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+											
 					bRetVal = false;
 					goto Cleanup;
 				}
@@ -588,7 +598,7 @@ namespace HMX.HASSActronQue
 		{
 			WaitHandle[] waitHandles = new WaitHandle[] { _eventStop };
 			int iWaitHandle = 0, iWaitInterval = 5;
-			bool bExit = false;
+			bool bExit = false, bFirstRun = true;
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor()");
 
@@ -606,7 +616,12 @@ namespace HMX.HASSActronQue
 					case WaitHandle.WaitTimeout: // Wait Timeout
 						if (await GetAirConditionerEvents())
 						{
-							MQTTRegister();
+							if (bFirstRun)
+							{
+								MQTTRegister();
+								bFirstRun = false;
+							}
+
 							MQTTUpdateData();
 						}
 
