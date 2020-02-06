@@ -670,12 +670,6 @@ namespace HMX.HASSActronQue
 			{
 				iWaitHandle = WaitHandle.WaitAny(waitHandles, TimeSpan.FromSeconds(_iQueueInterval));
 
-				if (!IsTokenValid())
-				{
-					Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
-					continue;
-				}
-
 				switch (iWaitHandle)
 				{
 					case 0: // Stop
@@ -684,11 +678,23 @@ namespace HMX.HASSActronQue
 						break;
 
 					case 1: // Queue Updated
+						if (!IsTokenValid())
+						{
+							Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
+							continue;
+						}
+
 						await ProcessQueue();
 
 						break;
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
+						if (!IsTokenValid())
+						{
+							Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
+							continue;
+						}
+						
 						await ProcessQueue();
 
 						break;
