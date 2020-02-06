@@ -195,6 +195,9 @@ namespace HMX.HASSActronQue
 			catch (OperationCanceledException eException)
 			{
 				Logging.WriteDebugLogError("Que.GeneratePairingToken()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+
+				bRetVal = false;
+				goto Cleanup;
 			}
 			catch (Exception eException)
 			{
@@ -284,6 +287,9 @@ namespace HMX.HASSActronQue
 			catch (OperationCanceledException eException)
 			{
 				Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+
+				bRetVal = false;
+				goto Cleanup;
 			}
 			catch (Exception eException)
 			{
@@ -656,6 +662,9 @@ namespace HMX.HASSActronQue
 			catch (OperationCanceledException eException)
 			{
 				Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+				
+				bRetVal = false;
+				goto Cleanup;
 			}
 			catch (Exception eException)
 			{
@@ -1137,6 +1146,9 @@ namespace HMX.HASSActronQue
 			catch (OperationCanceledException eException)
 			{
 				Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+
+				bRetVal = false;
+				goto Cleanup;
 			}
 			catch (Exception eException)
 			{
