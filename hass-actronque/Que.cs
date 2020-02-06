@@ -56,7 +56,7 @@ namespace HMX.HASSActronQue
 			_httpClientAuth = new HttpClient(httpClientHandler);
 
 			_httpClientAuth.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClient.BaseAddress = new Uri(_strBaseURL);
+			_httpClientAuth.BaseAddress = new Uri(_strBaseURL);
 
 			_httpClient = new HttpClient(httpClientHandler);
 
