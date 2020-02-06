@@ -23,7 +23,7 @@ namespace HMX.HASSActronQue
 		private static string _strNextEventURL = "";
 		private static HttpClient _httpClient = null, _httpClientAuth = null;
 		private static int _iCancellationTime = 10; // Seconds
-		private static int _iStateRetrievalInterval = 30; // Seconds
+		private static int _iPollInterval = 15; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
@@ -31,7 +31,7 @@ namespace HMX.HASSActronQue
 		private static QueToken _queToken = null;
 		private static AirConditionerData _airConditionerData = null;
 		private static object _oLockData = new object();
-		private static int _iZoneCount;
+		private static int _iZoneCount = 0;
 
 		public static DateTime LastUpdate
 		{
@@ -58,7 +58,7 @@ namespace HMX.HASSActronQue
 			_httpClient.BaseAddress = new Uri(_strQueBaseURL);
 		}
 
-		public static void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iZoneCount, ManualResetEvent eventStop)
+		public static void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iPollInterval, int iZoneCount, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 
@@ -67,6 +67,7 @@ namespace HMX.HASSActronQue
 			_strQueUser = strQueUser;
 			_strQuePassword = strQuePassword;
 			_strSerialNumber = strSerialNumber;
+			_iPollInterval = iPollInterval;
 			_iZoneCount = iZoneCount;
 			_eventStop = eventStop;
 
@@ -630,7 +631,7 @@ namespace HMX.HASSActronQue
 						break;
 				}
 
-				iWaitInterval = _iStateRetrievalInterval;
+				iWaitInterval = _iPollInterval;
 			}
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor() Complete");
@@ -785,22 +786,22 @@ namespace HMX.HASSActronQue
 		
 		public static async void ChangeZone(long lRequestId, int iZone, bool bState)
 		{
-			Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] State: {1}", lRequestId.ToString("X8"), bState ? "On" : "Off");
+			Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zone {1}: {2}", lRequestId.ToString("X8"), iZone, bState ? "On" : "Off");
 		}
 
 		public static async void ChangeMode(long lRequestId, AirConditionerMode mode)
 		{
-			Logging.WriteDebugLog("Que.ChangeMode() [0x{0}] State: {1}", lRequestId.ToString("X8"), mode.ToString());
+			Logging.WriteDebugLog("Que.ChangeMode() [0x{0}] Mode: {1}", lRequestId.ToString("X8"), mode.ToString());
 		}
 
 		public static async void ChangeFanMode(long lRequestId, FanMode fanMode)
 		{
-			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] State: {1}", lRequestId.ToString("X8"), fanMode.ToString());
+			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] Fan  Mode: {1}", lRequestId.ToString("X8"), fanMode.ToString());
 		}
 
 		public static async void ChangeTemperature(long lRequestId, double dblTemperature)
 		{
-			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] State: {1}", lRequestId.ToString("X8"), dblTemperature);
+			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Temperature: {1}", lRequestId.ToString("X8"), dblTemperature);
 		}
 	}
 }

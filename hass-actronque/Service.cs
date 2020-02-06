@@ -23,7 +23,7 @@ namespace HMX.HASSActronQue
 			IWebHost webHost;
 			string strMQTTUser, strMQTTPassword, strMQTTBroker;
 			string strQueUser, strQuePassword, strQueSerial;
-			int iZoneCount;
+			int iZoneCount, iPollInterval;
 
 			Logging.WriteDebugLog("Service.Start()");
 
@@ -43,6 +43,12 @@ namespace HMX.HASSActronQue
 			if (!Configuration.GetConfiguration(configuration, "MQTTBroker", out strMQTTBroker))
 				return;
 
+			if (!Configuration.GetConfiguration(configuration, "PollInterval", out iPollInterval) || iPollInterval < 10 || iPollInterval > 300)
+			{
+				Logging.WriteDebugLog("Service.Start() Poll interval must be between 10 and 300 (inclusive)");
+				return;
+			}
+
 			if (!Configuration.GetConfiguration(configuration, "QueUser", out strQueUser))
 				return;
 			if (!Configuration.GetPrivateConfiguration(configuration, "QuePassword", out strQuePassword))
@@ -58,7 +64,7 @@ namespace HMX.HASSActronQue
 	
 			MQTT.StartMQTT(strMQTTBroker, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
-			Que.Initialise(strQueUser, strQuePassword, strQueSerial, iZoneCount, _eventStop);
+			Que.Initialise(strQueUser, strQuePassword, strQueSerial, iPollInterval, iZoneCount, _eventStop);
 
 			try
 			{
