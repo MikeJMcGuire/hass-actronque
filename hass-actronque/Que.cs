@@ -214,7 +214,15 @@ namespace HMX.HASSActronQue
 				}
 				else
 				{
-					Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+					if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+					{
+						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}. Refreshing pairing token.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+						_pairingToken = null;
+					}
+					else
+						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
 					bRetVal = false;
 					goto Cleanup;
 				}
@@ -264,17 +272,24 @@ namespace HMX.HASSActronQue
 						break;
 
 					case 1: // Authentication Failure
-						if (await GeneratePairingToken())
+						if (_pairingToken == null)
+						{
+							if (await GeneratePairingToken())
+								await GenerateBearerToken();
+						}
+						else
 							await GenerateBearerToken();
 
 						break;
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
-						if (_pairingToken == null || _queToken == null)
+						if (_pairingToken == null)
 						{
 							if (await GeneratePairingToken())
 								await GenerateBearerToken();
 						}
+						else if (_queToken== null)
+							await GenerateBearerToken();
 						else if (_queToken != null && _queToken.TokenExpires <= DateTime.Now.Subtract(TimeSpan.FromMinutes(5)))
 						{
 							Logging.WriteDebugLog("Que.TokenMonitor() Refreshing expiring bearer token");
