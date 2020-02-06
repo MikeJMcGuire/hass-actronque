@@ -666,15 +666,15 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Que.QueueMonitor()");
 
-			if (!IsTokenValid())
-			{
-				Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
-				return;
-			}
-
 			while (!bExit)
 			{
 				iWaitHandle = WaitHandle.WaitAny(waitHandles, TimeSpan.FromSeconds(_iQueueInterval));
+
+				if (!IsTokenValid())
+				{
+					Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
+					continue;
+				}
 
 				switch (iWaitHandle)
 				{
