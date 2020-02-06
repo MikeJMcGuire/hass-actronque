@@ -21,16 +21,19 @@ namespace HMX.HASSActronQue
 		private static string _strDeviceUniqueIdentifier = "980374590873";
 		private static string _strQueUser, _strQuePassword, _strSerialNumber;
 		private static string _strNextEventURL = "";
+		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClient = null, _httpClientAuth = null;
 		private static int _iCancellationTime = 10; // Seconds
 		private static int _iPollInterval = 15; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
+		private static int _iQueueInterval = 10; // Seconds
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
+		private static AutoResetEvent _eventQueue = new AutoResetEvent(false);
 		private static PairingToken _pairingToken;
 		private static QueToken _queToken = null;
 		private static AirConditionerData _airConditionerData = null;
-		private static object _oLockData = new object();
+		private static object _oLockData = new object(), _oLockQueue = new object();
 		private static int _iZoneCount = 0;
 
 		public static DateTime LastUpdate
@@ -81,9 +84,12 @@ namespace HMX.HASSActronQue
 
 			threadMonitor = new Thread(new ThreadStart(AirConditionerMonitor));
 			threadMonitor.Start();
+
+			threadMonitor = new Thread(new ThreadStart(QueueMonitor));
+			threadMonitor.Start();
 		}
 
-		public static async Task<bool> GeneratePairingToken()
+		private static async Task<bool> GeneratePairingToken()
 		{
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
@@ -157,8 +163,7 @@ namespace HMX.HASSActronQue
 			return bRetVal;
 		}
 
-		
-		public static async Task<bool> GenerateBearerToken()
+		private static async Task<bool> GenerateBearerToken()
 		{
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
@@ -235,7 +240,7 @@ namespace HMX.HASSActronQue
 			return bRetVal;
 		}
 
-		public async static void TokenMonitor()
+		private async static void TokenMonitor()
 		{
 			WaitHandle[] waitHandles = new WaitHandle[] { _eventStop, _eventAuthenticationFailure };
 			int iWaitHandle = 0;
@@ -284,7 +289,7 @@ namespace HMX.HASSActronQue
 			Logging.WriteDebugLog("Que.TokenMonitor() Complete");
 		}
 
-		public async static Task<bool> GetAirConditionerEvents()
+		private async static Task<bool> GetAirConditionerEvents()
 		{
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
@@ -597,7 +602,7 @@ namespace HMX.HASSActronQue
 			return bRetVal;
 		}
 
-		public async static void AirConditionerMonitor()
+		private async static void AirConditionerMonitor()
 		{
 			WaitHandle[] waitHandles = new WaitHandle[] { _eventStop };
 			int iWaitHandle = 0, iWaitInterval = 5;
@@ -637,7 +642,76 @@ namespace HMX.HASSActronQue
 			Logging.WriteDebugLog("Que.AirConditionerMonitor() Complete");
 		}
 
-		public static bool IsTokenValid()
+		private async static void QueueMonitor()
+		{
+			WaitHandle[] waitHandles = new WaitHandle[] { _eventStop, _eventQueue };
+			int iWaitHandle = 0;
+			bool bExit = false;
+
+			Logging.WriteDebugLog("Que.QueueMonitor()");
+
+			while (!bExit)
+			{
+				iWaitHandle = WaitHandle.WaitAny(waitHandles, TimeSpan.FromSeconds(_iQueueInterval));
+
+				switch (iWaitHandle)
+				{
+					case 0: // Stop
+						bExit = true;
+
+						break;
+
+					case 1: // Queue Updated
+						await ProcessQueue();
+
+						break;
+
+					case WaitHandle.WaitTimeout: // Wait Timeout
+						await ProcessQueue();
+
+						break;
+				}
+			}
+
+			Logging.WriteDebugLog("Que.QueueMonitor() Complete");
+		}
+
+		private static async Task ProcessQueue()
+		{
+			QueueCommand command;
+
+			Logging.WriteDebugLog("Que.ProcessQueue()");
+
+			while (true)
+			{
+				lock (_oLockQueue)
+				{
+					if (_queueCommands.Count > 0)
+					{
+						command = _queueCommands.Peek();
+						Logging.WriteDebugLog("Que.ProcessQueue() Attempting Command: 0x{0}", command.RequestId.ToString("X8"));
+					}
+					else
+						command = null;
+				}
+
+				if (command == null)
+					break;
+
+				if (await SendCommand(command))
+				{
+					lock (_oLockQueue)
+					{
+						Logging.WriteDebugLog("Que.ProcessQueue() Command Complete: 0x{0}", command.RequestId.ToString("X8"));
+						_queueCommands.Dequeue();
+					}
+				}
+			}
+
+			Logging.WriteDebugLog("Que.ProcessQueue() Complete");
+		}
+
+		private static bool IsTokenValid()
 		{
 			if (_queToken != null && _queToken.TokenExpires > DateTime.Now)
 				return true;
@@ -763,7 +837,6 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-
 		private static double GetSetTemperature()
 		{
 			double dblSetTemperature = 0.0;
@@ -783,25 +856,214 @@ namespace HMX.HASSActronQue
 
 			return dblSetTemperature;
 		}
+
+		private static void AddCommandToQueue(QueueCommand command)
+		{
+			Logging.WriteDebugLog("Que.AddCommandToQueue() [0x{0}]", command.RequestId.ToString("X8"));
+
+			lock (_oLockQueue)
+			{
+				_queueCommands.Enqueue(command);
+
+				_eventQueue.Set();
+			}
+		}
 		
-		public static async void ChangeZone(long lRequestId, int iZone, bool bState)
+		public static void ChangeZone(long lRequestId, int iZone, bool bState)
 		{
+			QueueCommand command = new QueueCommand(lRequestId);
+
 			Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zone {1}: {2}", lRequestId.ToString("X8"), iZone, bState ? "On" : "Off");
+
+			command.Data.command.Add(string.Format("UserAirconSettings.EnabledZones[{0}]", iZone - 1), bState);
+			command.Data.command.Add("type", "set-settings");
+
+			AddCommandToQueue(command);
 		}
 
-		public static async void ChangeMode(long lRequestId, AirConditionerMode mode)
+		public static void ChangeMode(long lRequestId, AirConditionerMode mode)
 		{
+			QueueCommand command = new QueueCommand(lRequestId);
+
 			Logging.WriteDebugLog("Que.ChangeMode() [0x{0}] Mode: {1}", lRequestId.ToString("X8"), mode.ToString());
+
+			switch (mode)
+			{
+				case AirConditionerMode.Off:
+					command.Data.command.Add("UserAirconSettings.isOn", false);
+
+					break;
+
+				case AirConditionerMode.Automatic:
+					command.Data.command.Add("UserAirconSettings.isOn", true);
+					command.Data.command.Add("UserAirconSettings.Mode", "AUTO");
+
+					break;
+
+				case AirConditionerMode.Cool:
+					command.Data.command.Add("UserAirconSettings.isOn", true);
+					command.Data.command.Add("UserAirconSettings.Mode", "COOL");
+
+					break;
+
+				case AirConditionerMode.Fan_Only:
+					command.Data.command.Add("UserAirconSettings.isOn", true);
+					command.Data.command.Add("UserAirconSettings.Mode", "FAN");
+
+					break;
+
+				case AirConditionerMode.Heat:
+					command.Data.command.Add("UserAirconSettings.isOn", true);
+					command.Data.command.Add("UserAirconSettings.Mode", "HEAT");
+
+					break;
+			}
+			
+			command.Data.command.Add("type", "set-settings");
+
+			AddCommandToQueue(command);
 		}
 
-		public static async void ChangeFanMode(long lRequestId, FanMode fanMode)
+		public static void ChangeFanMode(long lRequestId, FanMode fanMode)
 		{
+			QueueCommand command = new QueueCommand(lRequestId);
+
 			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] Fan  Mode: {1}", lRequestId.ToString("X8"), fanMode.ToString());
+
+			switch (fanMode)
+			{
+				case FanMode.Automatic:
+					command.Data.command.Add("UserAirconSettings.FanMode", "AUTO");
+
+					break;
+
+				case FanMode.Low:
+					command.Data.command.Add("UserAirconSettings.FanMode", "LOW");
+
+					break;
+
+				case FanMode.Medium:
+					command.Data.command.Add("UserAirconSettings.FanMode", "MED");
+
+					break;
+
+				case FanMode.High:
+					command.Data.command.Add("UserAirconSettings.FanMode", "HIGH");
+
+					break;
+			}
+
+			command.Data.command.Add("type", "set-settings");
+
+			AddCommandToQueue(command);
 		}
 
-		public static async void ChangeTemperature(long lRequestId, double dblTemperature)
+		public static void ChangeTemperature(long lRequestId, double dblTemperature)
 		{
+			QueueCommand command = new QueueCommand(lRequestId);
+
 			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Temperature: {1}", lRequestId.ToString("X8"), dblTemperature);
+
+			switch (_airConditionerData.Mode)
+			{
+				case "OFF":
+					return;
+
+				case "FAN":
+					return;
+
+				case "COOL":
+					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
+
+					break;
+
+				case "HEAT":
+					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
+
+					break;
+
+				case "AUTO":
+					// TBA
+					return;
+
+					// break;
+			}
+
+			command.Data.command.Add("type", "set-settings");
+
+			AddCommandToQueue(command);
+		}
+
+		private static async Task<bool> SendCommand(QueueCommand command)
+		{
+			HttpResponseMessage httpResponse = null;
+			CancellationTokenSource cancellationToken = null;
+			StringContent content;
+			long lRequestId = RequestManager.GetRequestId(command.RequestId);
+			string strPageURL = "/api/v0/client/ac-systems/cmds/send?serial=";
+			bool bRetVal = true;
+
+			Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _strQueBaseURL, strPageURL, _strSerialNumber);
+
+			try
+			{
+				content = new StringContent(JsonConvert.SerializeObject(command.Data));
+
+				content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+				Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Content: {1}", lRequestId.ToString("X8"), await content.ReadAsStringAsync());
+			}
+			catch (Exception eException)
+			{
+				Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, eException, "Unable to serialize command.");
+
+				bRetVal = false;
+				goto Cleanup;
+			}
+
+			try
+			{
+				cancellationToken = new CancellationTokenSource();
+				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
+
+				httpResponse = await _httpClient.PostAsync(strPageURL + _strSerialNumber, content, cancellationToken.Token);
+
+				if (httpResponse.IsSuccessStatusCode)
+					Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Response {1}/{2}", lRequestId.ToString("X8"), httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+				else
+				{
+					if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1} - check the Que Serial number.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+					else if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+					{
+						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+						_eventAuthenticationFailure.Set();
+					}
+					else
+						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+				}
+			}
+			catch (Exception eException)
+			{
+				if (eException.InnerException != null)
+					Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, eException.InnerException, "Unable to process API HTTP response.");
+				else
+					Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, eException, "Unable to process API HTTP response.");
+
+				bRetVal = false;
+				goto Cleanup;
+			}
+
+		Cleanup:
+			cancellationToken?.Dispose();
+			httpResponse?.Dispose();
+
+			if (!bRetVal)
+				_queToken = null;
+
+			return bRetVal;
 		}
 	}
 }
