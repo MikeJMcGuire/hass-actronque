@@ -16,9 +16,10 @@ namespace HMX.HASSActronQue
 		private static string _strBaseUserAgent = "nxgen-ios/1214 CFNetwork/976 Darwin/18.2.0";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
+		private static string _strDeviceIdFile = "/data/deviceid.json";
 		private static string _strPairingTokenFile = "/data/pairingtoken.json";
 		private static string _strBearerTokenFile = "/data/bearertoken.json";
-		private static string _strDeviceUniqueIdentifier = "980374590873";
+		private static string _strDeviceUniqueIdentifier = "";
 		private static string _strQueUser, _strQuePassword, _strSerialNumber;
 		private static string _strNextEventURL = "";
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
@@ -80,6 +81,37 @@ namespace HMX.HASSActronQue
 			for (int iIndex = 1; iIndex <= iZoneCount; iIndex++)
 				_airConditionerData.Zones.Add(iIndex, new AirConditionerZone());
 
+			// Get Device Id
+			try
+			{
+				if (File.Exists(_strDeviceIdFile))
+				{
+					_strDeviceUniqueIdentifier = JsonConvert.DeserializeObject<string>(File.ReadAllText(_strDeviceIdFile));
+
+					Logging.WriteDebugLog("Que.Initialise() Device Id: {0}", _strDeviceUniqueIdentifier);
+				}
+			}
+			catch (Exception eException)
+			{
+				Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to read json file.");
+			}
+
+			// Get Pairing Token
+			try
+			{
+				if (File.Exists(_strPairingTokenFile))
+				{
+					_pairingToken = JsonConvert.DeserializeObject<PairingToken>(File.ReadAllText(_strPairingTokenFile));
+
+					Logging.WriteDebugLog("Que.Initialise() Restored Pairing Token");
+				}
+			}
+			catch (Exception eException)
+			{
+				Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to read json file.");
+			}
+
+
 			threadMonitor = new Thread(new ThreadStart(TokenMonitor));
 			threadMonitor.Start();
 
@@ -102,6 +134,23 @@ namespace HMX.HASSActronQue
 			bool bRetVal = true;
 
 			Logging.WriteDebugLog("Que.GeneratePairingToken() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _strQueBaseURL, strPageURL);
+
+			if (_strDeviceUniqueIdentifier == "")
+			{
+				_strDeviceUniqueIdentifier = GenerateDeviceId();
+
+				Logging.WriteDebugLog("Que.GeneratePairingToken() Device Id: {0}", _strDeviceUniqueIdentifier);
+
+				// Update Token File
+				try
+				{
+					File.WriteAllText(_strDeviceIdFile, JsonConvert.SerializeObject(_strDeviceUniqueIdentifier));
+				}
+				catch (Exception eException)
+				{
+					Logging.WriteDebugLogError("Que.GeneratePairingToken()", eException, "Unable to update json file.");
+				}
+			}
 
 			dtFormContent.Add("username", _strQueUser);
 			dtFormContent.Add("password", _strQuePassword);
@@ -963,7 +1012,7 @@ namespace HMX.HASSActronQue
 		{
 			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
-			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] Fan  Mode: {1}", lRequestId.ToString("X8"), fanMode.ToString());
+			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] Fan Mode: {1}", lRequestId.ToString("X8"), fanMode.ToString());
 
 			switch (fanMode)
 			{
@@ -1099,6 +1148,19 @@ namespace HMX.HASSActronQue
 				_queToken = null;
 
 			return bRetVal;
+		}
+
+		private static string GenerateDeviceId()
+		{
+			Random random = new Random();
+			int iLength = 25;
+
+			StringBuilder sbDeviceId = new StringBuilder();
+
+			for (int iIndex = 0; iIndex < iLength; iIndex++)
+				sbDeviceId.Append(random.Next(0, 9));
+
+			return sbDeviceId.ToString();
 		}
 	}
 }
