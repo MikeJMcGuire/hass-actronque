@@ -192,6 +192,10 @@ namespace HMX.HASSActronQue
 					goto Cleanup;
 				}
 			}
+			catch (OperationCanceledException eException)
+			{
+				Logging.WriteDebugLogError("Que.GeneratePairingToken()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+			}
 			catch (Exception eException)
 			{
 				if (eException.InnerException != null)
@@ -266,16 +270,20 @@ namespace HMX.HASSActronQue
 				{
 					if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
 					{
-						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}. Refreshing pairing token.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+						Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}. Refreshing pairing token.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 						_pairingToken = null;
 					}
 					else
-						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+						Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 					bRetVal = false;
 					goto Cleanup;
 				}
+			}
+			catch (OperationCanceledException eException)
+			{
+				Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
 			}
 			catch (Exception eException)
 			{
@@ -645,6 +653,10 @@ namespace HMX.HASSActronQue
 					bRetVal = false;
 					goto Cleanup;
 				}
+			}
+			catch (OperationCanceledException eException)
+			{
+				Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
 			}
 			catch (Exception eException)
 			{
@@ -1128,6 +1140,10 @@ namespace HMX.HASSActronQue
 						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 				}
+			}
+			catch (OperationCanceledException eException)
+			{
+				Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
 			}
 			catch (Exception eException)
 			{
