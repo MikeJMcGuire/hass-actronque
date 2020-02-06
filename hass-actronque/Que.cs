@@ -662,12 +662,12 @@ namespace HMX.HASSActronQue
 						break;
 
 					case 1: // Queue Updated
-						await ProcessQueue();
+						//await ProcessQueue();
 
 						break;
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
-						await ProcessQueue();
+						//await ProcessQueue();
 
 						break;
 				}
