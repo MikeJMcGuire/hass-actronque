@@ -386,7 +386,6 @@ namespace HMX.HASSActronQue
 
 			if (!IsTokenValid())
 			{
-				Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Aborting - No Bearer Token", lRequestId.ToString("X8"));
 				bRetVal = false;
 				goto Cleanup;
 			}
@@ -740,10 +739,7 @@ namespace HMX.HASSActronQue
 
 					case 1: // Queue Updated
 						if (!IsTokenValid())
-						{
-							Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
 							continue;
-						}
 
 						await ProcessQueue();
 
@@ -751,10 +747,7 @@ namespace HMX.HASSActronQue
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
 						if (!IsTokenValid())
-						{
-							Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
 							continue;
-						}
 						
 						await ProcessQueue();
 
