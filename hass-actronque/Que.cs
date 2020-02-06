@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -48,6 +49,14 @@ namespace HMX.HASSActronQue
 			HttpClientHandler httpClientHandler = new HttpClientHandler();
 
 			Logging.WriteDebugLog("Que.Que()");
+
+			if ((Environment.GetEnvironmentVariable("Proxy") ?? "") != "")
+			{
+				Logging.WriteDebugLog("Que.Que() Proxy: {0}", Environment.GetEnvironmentVariable("Proxy"));
+
+				httpClientHandler.Proxy = new WebProxy(Environment.GetEnvironmentVariable("Proxy").ToString(), 443);
+				httpClientHandler.UseProxy = true;
+			}
 
 			if (httpClientHandler.SupportsAutomaticDecompression)
 				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
