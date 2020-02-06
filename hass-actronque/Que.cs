@@ -27,6 +27,7 @@ namespace HMX.HASSActronQue
 		private static int _iPollInterval = 15; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 10; // Seconds
+		private static int _iCommandExpiry = 10; // Seconds
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
 		private static AutoResetEvent _eventQueue = new AutoResetEvent(false);
@@ -665,6 +666,12 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Que.QueueMonitor()");
 
+			if (!IsTokenValid())
+			{
+				Logging.WriteDebugLog("Que.QueueMonitor() Aborting - No Bearer Token");
+				return;
+			}
+
 			while (!bExit)
 			{
 				iWaitHandle = WaitHandle.WaitAny(waitHandles, TimeSpan.FromSeconds(_iQueueInterval));
@@ -677,12 +684,12 @@ namespace HMX.HASSActronQue
 						break;
 
 					case 1: // Queue Updated
-						//await ProcessQueue();
+						await ProcessQueue();
 
 						break;
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
-						//await ProcessQueue();
+						await ProcessQueue();
 
 						break;
 				}
@@ -705,6 +712,13 @@ namespace HMX.HASSActronQue
 					{
 						command = _queueCommands.Peek();
 						Logging.WriteDebugLog("Que.ProcessQueue() Attempting Command: 0x{0}", command.RequestId.ToString("X8"));
+
+						if (command.Expires <= DateTime.Now)
+						{
+							Logging.WriteDebugLog("Que.ProcessQueue() Command Expired: 0x{0}", command.RequestId.ToString("X8"));
+							_queueCommands.Dequeue();
+							continue;
+						}
 					}
 					else
 						command = null;
@@ -886,7 +900,7 @@ namespace HMX.HASSActronQue
 		
 		public static void ChangeZone(long lRequestId, int iZone, bool bState)
 		{
-			QueueCommand command = new QueueCommand(lRequestId);
+			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zone {1}: {2}", lRequestId.ToString("X8"), iZone, bState ? "On" : "Off");
 
@@ -898,7 +912,7 @@ namespace HMX.HASSActronQue
 
 		public static void ChangeMode(long lRequestId, AirConditionerMode mode)
 		{
-			QueueCommand command = new QueueCommand(lRequestId);
+			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeMode() [0x{0}] Mode: {1}", lRequestId.ToString("X8"), mode.ToString());
 
@@ -941,7 +955,7 @@ namespace HMX.HASSActronQue
 
 		public static void ChangeFanMode(long lRequestId, FanMode fanMode)
 		{
-			QueueCommand command = new QueueCommand(lRequestId);
+			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] Fan  Mode: {1}", lRequestId.ToString("X8"), fanMode.ToString());
 
@@ -975,7 +989,7 @@ namespace HMX.HASSActronQue
 
 		public static void ChangeTemperature(long lRequestId, double dblTemperature)
 		{
-			QueueCommand command = new QueueCommand(lRequestId);
+			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Temperature: {1}", lRequestId.ToString("X8"), dblTemperature);
 

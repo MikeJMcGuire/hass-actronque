@@ -8,11 +8,13 @@ namespace HMX.HASSActronQue
 	{
 		public long RequestId;
 		public QueueCommandData Data;
+		public DateTime Expires;
 
-		public QueueCommand(long lRequestId)
+		public QueueCommand(long lRequestId, DateTime dtExpires)
 		{
 			RequestId = lRequestId;
 			Data = new QueueCommandData();
+			Expires = dtExpires;
 		}
 	}
 }
