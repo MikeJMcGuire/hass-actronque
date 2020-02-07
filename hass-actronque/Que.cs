@@ -253,6 +253,8 @@ namespace HMX.HASSActronQue
 
 					_queToken = queToken;
 
+					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+
 					// Update Token File
 					try
 					{
@@ -317,14 +319,10 @@ namespace HMX.HASSActronQue
 			if (_pairingToken == null)
 			{
 				if (await GeneratePairingToken())
-					if (await GenerateBearerToken())
-						_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+					await GenerateBearerToken();
 			}
 			else
-			{
-				if (await GenerateBearerToken())
-					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
-			}
+				await GenerateBearerToken();
 
 			while (!bExit)
 			{
@@ -359,8 +357,7 @@ namespace HMX.HASSActronQue
 						else if (_queToken != null && _queToken.TokenExpires <= DateTime.Now.Subtract(TimeSpan.FromMinutes(5)))
 						{
 							Logging.WriteDebugLog("Que.TokenMonitor() Refreshing expiring bearer token");
-							if (await GenerateBearerToken())
-								_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+							await GenerateBearerToken();
 						}
 
 						break;
