@@ -19,8 +19,7 @@
     "MQTTBroker": "core-mosquitto",
     "PollInterval": 30,
     "QueUser": "queuser",
-    "QuePassword": "quepassword",
-    "ZoneCount": 8
+    "QuePassword": "quepassword"
   },
   "schema": {
     "MQTTUser": "str?",
@@ -29,7 +28,6 @@
     "PollInterval": "int(10,300)",
     "QueUser": "str",
     "QuePassword": "str",
-    "QueSerial": "str?",
-    "ZoneCount": "int(0,8)"
+    "QueSerial": "str?"
   }
 }

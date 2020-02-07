@@ -4,6 +4,5 @@
   "MQTTBroker": "core-mosquitto",
   "PollInterval": 30,
   "QueUser": "queuser",
-  "QuePassword": "quepassword",
-  "ZoneCount": 8
+  "QuePassword": "quepassword"
 }
