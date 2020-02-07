@@ -799,6 +799,10 @@ namespace HMX.HASSActronQue
 						break;
 
 					case WaitHandle.WaitTimeout: // Wait Timeout
+						if (_strSerialNumber == "")
+							if (!await GetAirConditionerSerial())
+								continue;
+
 						if (await GetAirConditionerEvents())
 						{
 							if (bFirstRun)
