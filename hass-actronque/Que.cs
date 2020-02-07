@@ -929,7 +929,7 @@ namespace HMX.HASSActronQue
 		{
 			WaitHandle[] waitHandles = new WaitHandle[] { _eventStop };
 			int iWaitHandle = 0, iWaitInterval = 5;
-			bool bExit = false, bFirstRun = true;
+			bool bExit = false;
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor()");
 
@@ -950,19 +950,14 @@ namespace HMX.HASSActronQue
 								continue;
 
 						if (_airConditionerZones.Count == 0)
+						{
 							if (!await GetAirConditionerZones())
 								continue;
-
-						if (await GetAirConditionerEvents())
-						{
-							if (bFirstRun)
-							{
+							else
 								MQTTRegister();
-								bFirstRun = false;
-							}
-
-							MQTTUpdateData();
 						}
+						if (await GetAirConditionerEvents())
+							MQTTUpdateData();
 
 						break;
 				}
