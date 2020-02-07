@@ -320,9 +320,17 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Que.TokenMonitor()");
 
-			if (await GeneratePairingToken())
+			if (_pairingToken == null)
+			{
+				if (await GeneratePairingToken())
+					if (await GenerateBearerToken())
+						_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+			}
+			else
+			{
 				if (await GenerateBearerToken())
 					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+			}
 
 			while (!bExit)
 			{
