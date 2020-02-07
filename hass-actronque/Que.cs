@@ -94,7 +94,7 @@ namespace HMX.HASSActronQue
 			}
 			catch (Exception eException)
 			{
-				Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to read json file.");
+				Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to read device json file.");
 			}
 
 			// Get Pairing Token
@@ -109,9 +109,8 @@ namespace HMX.HASSActronQue
 			}
 			catch (Exception eException)
 			{
-				Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to read json file.");
+				Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to read pairing token json file.");
 			}
-
 
 			threadMonitor = new Thread(new ThreadStart(TokenMonitor));
 			threadMonitor.Start();
@@ -142,7 +141,7 @@ namespace HMX.HASSActronQue
 
 				Logging.WriteDebugLog("Que.GeneratePairingToken() Device Id: {0}", _strDeviceUniqueIdentifier);
 
-				// Update Token File
+				// Update Device Id File
 				try
 				{
 					File.WriteAllText(_strDeviceIdFile, JsonConvert.SerializeObject(_strDeviceUniqueIdentifier));
@@ -353,7 +352,7 @@ namespace HMX.HASSActronQue
 							if (await GeneratePairingToken())
 								await GenerateBearerToken();
 						}
-						else if (_queToken== null)
+						else if (_queToken == null)
 							await GenerateBearerToken();
 						else if (_queToken != null && _queToken.TokenExpires <= DateTime.Now.Subtract(TimeSpan.FromMinutes(5)))
 						{
@@ -870,7 +869,10 @@ namespace HMX.HASSActronQue
 
 			// Power, Mode & Set Temperature
 			if (!_airConditionerData.On)
+			{
 				MQTT.SendMessage("actronque/mode", "off");
+				MQTT.SendMessage("actronque/settemperature", "");
+			}
 			else
 			{
 				switch (_airConditionerData.Mode)
@@ -892,6 +894,7 @@ namespace HMX.HASSActronQue
 
 					case "FAN":
 						MQTT.SendMessage("actronque/mode", "fan_only");
+						MQTT.SendMessage("actronque/settemperature", "");
 						break;
 
 					default:
