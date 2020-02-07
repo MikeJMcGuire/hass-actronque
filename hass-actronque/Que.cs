@@ -368,6 +368,96 @@ namespace HMX.HASSActronQue
 			Logging.WriteDebugLog("Que.TokenMonitor() Complete");
 		}
 
+		private async static Task<bool> GetAirConditionerSerial()
+		{
+			HttpResponseMessage httpResponse = null;
+			CancellationTokenSource cancellationToken = null;
+			long lRequestId = RequestManager.GetRequestId();
+			string strPageURL = "/api/v0/client/ac-systems";
+			string strResponse;
+			dynamic jsonResponse;
+			bool bRetVal = true;
+			string strSerial, strDescription;
+
+			Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _strBaseURL, strPageURL);
+
+			if (!IsTokenValid())
+			{
+				bRetVal = false;
+				goto Cleanup;
+			}
+
+			try
+			{
+				cancellationToken = new CancellationTokenSource();
+				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
+
+				httpResponse = await _httpClient.GetAsync(strPageURL, cancellationToken.Token);
+
+				if (httpResponse.IsSuccessStatusCode)
+				{
+					strResponse = await httpResponse.Content.ReadAsStringAsync();
+
+					Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
+
+					strResponse = strResponse.Replace("ac-system", "acsystem");
+
+					jsonResponse = JsonConvert.DeserializeObject(strResponse);
+
+					for (int iIndex = 0; iIndex < jsonResponse._embedded.acsystem.Count; iIndex++)
+					{
+						strSerial = jsonResponse._embedded.acsystem[0].serial.ToString();
+						strDescription = jsonResponse._embedded.acsystem[0].description.ToString();
+
+						if (_strSerialNumber == "")
+							_strSerialNumber = strSerial;
+
+						Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Found AC: {1} - {2}", lRequestId.ToString("X8"), strSerial, strDescription);
+					}
+				}
+				else
+				{
+					if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+					{
+						Logging.WriteDebugLogError("Que.GetAirConditionerSerial()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+						_eventAuthenticationFailure.Set();
+					}
+					else
+						Logging.WriteDebugLogError("Que.GetAirConditionerSerial()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+					bRetVal = false;
+					goto Cleanup;
+				}
+			}
+			catch (OperationCanceledException eException)
+			{
+				Logging.WriteDebugLogError("Que.GetAirConditionerSerial()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+
+				bRetVal = false;
+				goto Cleanup;
+			}
+			catch (Exception eException)
+			{
+				if (eException.InnerException != null)
+					Logging.WriteDebugLogError("Que.GetAirConditionerSerial()", lRequestId, eException.InnerException, "Unable to process API HTTP response.");
+				else
+					Logging.WriteDebugLogError("Que.GetAirConditionerSerial()", lRequestId, eException, "Unable to process API HTTP response.");
+
+				bRetVal = false;
+				goto Cleanup;
+			}
+
+		Cleanup:
+			cancellationToken?.Dispose();
+			httpResponse?.Dispose();
+
+			if (!bRetVal)
+				_strSerialNumber = "";
+
+			return bRetVal;
+		}
+
 		private async static Task<bool> GetAirConditionerEvents()
 		{
 			HttpResponseMessage httpResponse = null;

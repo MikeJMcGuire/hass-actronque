@@ -53,8 +53,7 @@ namespace HMX.HASSActronQue
 				return;
 			if (!Configuration.GetPrivateConfiguration(configuration, "QuePassword", out strQuePassword))
 				return;
-			if (!Configuration.GetConfiguration(configuration, "QueSerial", out strQueSerial))
-				return;
+			Configuration.GetOptionalConfiguration(configuration, "QueSerial", out strQueSerial);			
 
 			if (!Configuration.GetConfiguration(configuration, "ZoneCount", out iZoneCount) || iZoneCount < 0 || iZoneCount > 8)
 			{

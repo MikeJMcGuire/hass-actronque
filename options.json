@@ -5,6 +5,5 @@
   "PollInterval": 30,
   "QueUser": "queuser",
   "QuePassword": "quepassword",
-  "QueSerial": "queserialnumber",
   "ZoneCount": 8
 }
