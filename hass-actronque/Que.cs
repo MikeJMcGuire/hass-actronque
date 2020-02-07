@@ -25,7 +25,7 @@ namespace HMX.HASSActronQue
 		private static string _strNextEventURL = "";
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClient = null, _httpClientAuth = null;
-		private static int _iCancellationTime = 10; // Seconds
+		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 15; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 10; // Seconds
@@ -436,6 +436,11 @@ namespace HMX.HASSActronQue
 								{
 									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Incremental Update: {1}", lRequestId.ToString("X8"), change.Name);
 
+									lock (_oLockData)
+									{
+										_airConditionerData.LastUpdated = DateTime.Now;
+									}
+
 									// Compressor Mode
 									if (change.Name == "LiveAircon.CompressorMode")
 									{
@@ -455,7 +460,6 @@ namespace HMX.HASSActronQue
 									{
 										airConditionerData.Mode = change.Value.ToString();
 										if (airConditionerData.Mode == "")
-
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
 										else
 										{
@@ -470,7 +474,6 @@ namespace HMX.HASSActronQue
 									{
 										airConditionerData.FanMode = change.Value.ToString();
 										if (airConditionerData.FanMode == "")
-
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.FanMode");
 										else
 										{
