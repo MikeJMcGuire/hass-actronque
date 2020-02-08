@@ -1466,9 +1466,6 @@ namespace HMX.HASSActronQue
 			cancellationToken?.Dispose();
 			httpResponse?.Dispose();
 
-			if (!bRetVal)
-				_queToken = null;
-
 			return bRetVal;
 		}
 
