@@ -14,7 +14,7 @@ namespace HMX.HASSActronQue
 	public class Que
 	{
 		private static string _strBaseURL = "https://que.actronair.com.au";
-		private static string _strBaseUserAgent = "nxgen-ios/1214 CFNetwork/976 Darwin/18.2.0";
+		private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00),SignalR.Client.iOS/2.0.0.0 (iPhone 12.1.4)";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
 		private static string _strDeviceIdFile = "/data/deviceid.json";
@@ -25,7 +25,7 @@ namespace HMX.HASSActronQue
 		private static string _strNextEventURL = "";
 		private static bool _bPerZoneControls = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
-		private static HttpClient _httpClient = null, _httpClientAuth = null;
+		private static HttpClient _httpClient = null, _httpClientAuth = null, _httpClientCommands = null;
 		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 15; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
@@ -62,8 +62,15 @@ namespace HMX.HASSActronQue
 
 			_httpClient = new HttpClient(httpClientHandler);
 
+			_httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
 			_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
 			_httpClient.BaseAddress = new Uri(_strBaseURL);
+
+			_httpClientCommands = new HttpClient(httpClientHandler);
+
+			_httpClientCommands.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
+			_httpClientCommands.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
+			_httpClientCommands.BaseAddress = new Uri(_strBaseURL);
 		}
 
 		public static void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iPollInterval, bool bPerZoneControls, ManualResetEvent eventStop)
@@ -1083,7 +1090,7 @@ namespace HMX.HASSActronQue
 
 				if (_bPerZoneControls)
 				{
-					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "{{\"name\":\"{0} {3}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"temperature_command_topic\":\"actronque/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"action_topic\":\"actronque/compressor\",\"temperature_state_topic\":\"actronque/zone{1}/settemperature\",\"mode_state_topic\":\"actronque/zone{1}/mode\",\"current_temperature_topic\":\"actronque/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", _airConditionerZones[iZone].Name, iZone, Service.ServiceName.ToLower(), _strAirConditionerName);
+					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "{{\"name\":\"{0} {3}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"temperature_command_topic\":\"actronque/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque/zone{1}/settemperature\",\"mode_state_topic\":\"actronque/zone{1}/mode\",\"current_temperature_topic\":\"actronque/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", _airConditionerZones[iZone].Name, iZone, Service.ServiceName.ToLower(), _strAirConditionerName);
 					MQTT.Subscribe("actronque/zone{0}/temperature/set", iZone);
 				}
 			}
@@ -1425,7 +1432,7 @@ namespace HMX.HASSActronQue
 				cancellationToken = new CancellationTokenSource();
 				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-				httpResponse = await _httpClient.PostAsync(strPageURL + _strSerialNumber, content, cancellationToken.Token);
+				httpResponse = await _httpClientCommands.PostAsync(strPageURL + _strSerialNumber, content, cancellationToken.Token);
 
 				if (httpResponse.IsSuccessStatusCode)
 					Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Response {1}/{2}", lRequestId.ToString("X8"), httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
