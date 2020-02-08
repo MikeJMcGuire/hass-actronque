@@ -863,6 +863,7 @@ namespace HMX.HASSActronQue
 								{
 									for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
 									{
+										// Enabled
 										if (!bool.TryParse(aEnabledZones[iZoneIndex].ToString(), out bTemp))
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read zone information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
 										else
@@ -874,6 +875,7 @@ namespace HMX.HASSActronQue
 											}
 										}
 
+										// Temperature
 										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].LiveTemp_oC.ToString(), out dblTemp))
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex));
 										else
@@ -882,6 +884,29 @@ namespace HMX.HASSActronQue
 											{
 												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
 													_airConditionerZones[iZoneIndex + 1].Temperature = dblTemp;
+											}
+										}
+
+										// Cooling Set Temperature
+										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex));
+										else
+										{
+											lock (_oLockData)
+											{
+												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+													_airConditionerZones[iZoneIndex + 1].SetTemperatureCooling = dblTemp;
+											}											
+										}
+										// Heating Set Temperature
+										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex));
+										else
+										{
+											lock (_oLockData)
+											{
+												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+													_airConditionerZones[iZoneIndex + 1].SetTemperatureHeating = dblTemp;
 											}
 										}
 									}
