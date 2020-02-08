@@ -14,7 +14,7 @@ namespace HMX.HASSActronQue
 	public class Que
 	{
 		private static string _strBaseURL = "https://que.actronair.com.au";
-		private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00),SignalR.Client.iOS/2.0.0.0 (iPhone 12.1.4)";
+		private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00)";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
 		private static string _strDeviceIdFile = "/data/deviceid.json";
