@@ -14,7 +14,7 @@ namespace HMX.HASSActronQue
 	public class Que
 	{
 		private static string _strBaseURL = "https://que.actronair.com.au";
-		private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00)";
+		//private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00)";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
 		private static string _strDeviceIdFile = "/data/deviceid.json";
@@ -57,19 +57,19 @@ namespace HMX.HASSActronQue
 
 			_httpClientAuth = new HttpClient(httpClientHandler);
 
-			_httpClientAuth.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
+			//_httpClientAuth.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
 			_httpClientAuth.BaseAddress = new Uri(_strBaseURL);
 
 			_httpClient = new HttpClient(httpClientHandler);
 
-			_httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
-			_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
+			//_httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
+			//_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
 			_httpClient.BaseAddress = new Uri(_strBaseURL);
 
 			_httpClientCommands = new HttpClient(httpClientHandler);
 
-			_httpClientCommands.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
-			_httpClientCommands.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
+			//_httpClientCommands.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
+			//_httpClientCommands.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
 			_httpClientCommands.BaseAddress = new Uri(_strBaseURL);
 		}
 
@@ -264,6 +264,7 @@ namespace HMX.HASSActronQue
 					_queToken = queToken;
 
 					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+					_httpClientCommands.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
 
 					// Update Token File
 					try
@@ -968,7 +969,10 @@ namespace HMX.HASSActronQue
 								MQTTRegister();
 						}
 						if (await GetAirConditionerEvents())
+						{
 							MQTTUpdateData();
+							MQTT.Update(null);
+						}
 
 						break;
 				}
