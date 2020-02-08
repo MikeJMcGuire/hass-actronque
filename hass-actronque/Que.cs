@@ -1097,6 +1097,8 @@ namespace HMX.HASSActronQue
 					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "{{\"name\":\"{0} {3}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"temperature_command_topic\":\"actronque/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque/zone{1}/settemperature\",\"mode_state_topic\":\"actronque/zone{1}/mode\",\"current_temperature_topic\":\"actronque/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", _airConditionerZones[iZone].Name, iZone, Service.ServiceName.ToLower(), _strAirConditionerName);
 					MQTT.Subscribe("actronque/zone{0}/temperature/set", iZone);
 				}
+				else
+					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "");
 			}
 
 			MQTT.Subscribe("actronque/mode/set");
@@ -1183,7 +1185,7 @@ namespace HMX.HASSActronQue
 					if (!_airConditionerData.On || !_airConditionerZones[iIndex].State)
 					{
 						MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), "off");
-						MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), "");
+						MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), GetSetTemperature(_airConditionerZones[iIndex].SetTemperatureHeating, _airConditionerZones[iIndex].SetTemperatureCooling).ToString("N1"));
 					}
 					else
 					{
