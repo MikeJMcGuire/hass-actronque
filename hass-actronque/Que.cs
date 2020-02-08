@@ -1442,6 +1442,8 @@ namespace HMX.HASSActronQue
 					else
 						Logging.WriteDebugLogError("Que.SendCommand()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
+					bRetVal = false;
+					goto Cleanup;
 				}
 			}
 			catch (OperationCanceledException eException)
