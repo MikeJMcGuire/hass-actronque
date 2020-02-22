@@ -1028,7 +1028,7 @@ namespace HMX.HASSActronQue
 						break;
 				}
 
-				if (iCommandAckRetries > 0)
+				if (_bCommandAckPending && iCommandAckRetries > 0)
 				{
 					iWaitInterval = _iPollIntervalUpdate;
 
