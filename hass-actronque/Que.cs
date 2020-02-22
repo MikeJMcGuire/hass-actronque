@@ -981,6 +981,16 @@ namespace HMX.HASSActronQue
 						break;
 
 					case 1: // Pull Update
+						Logging.WriteDebugLog("Que.AirConditionerMonitor()");
+
+						if (await GetAirConditionerEvents())
+						{
+							MQTTUpdateData();
+							MQTT.Update(null);
+						}
+
+						break;
+
 					case WaitHandle.WaitTimeout: // Wait Timeout
 						if (_strSerialNumber == "")
 							if (!await GetAirConditionerSerial())
@@ -1031,7 +1041,8 @@ namespace HMX.HASSActronQue
 						if (!IsTokenValid())
 							continue;
 
-						await ProcessQueue();
+						if (await ProcessQueue())
+							_eventUpdate.Set();
 
 						break;
 
