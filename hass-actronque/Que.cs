@@ -981,7 +981,7 @@ namespace HMX.HASSActronQue
 						break;
 
 					case 1: // Pull Update
-						Logging.WriteDebugLog("Que.AirConditionerMonitor()");
+						Logging.WriteDebugLog("Que.AirConditionerMonitor() Quick Update");
 
 						if (await GetAirConditionerEvents())
 						{
