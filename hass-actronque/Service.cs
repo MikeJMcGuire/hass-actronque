@@ -93,16 +93,64 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Service.MQTTProcessor() [0x{0}] {1}", lRequestId.ToString("X8"), strTopic);
 
-			if (strTopic.StartsWith("actronque/zone") && strTopic.EndsWith("/set"))
+			// Per Zone Temperature
+			if (strTopic.StartsWith("actronque/zone") && strTopic.EndsWith("/temperature/set"))
+			{
+				iZone = int.Parse(strTopic.Substring(14, 1));
+
+				if (double.TryParse(strPayload, out dblTemperature))
+					Que.ChangeTemperature(lRequestId, dblTemperature, iZone);
+			}
+			// Per Zone Mode
+			else if (strTopic.StartsWith("actronque/zone") && strTopic.EndsWith("/mode/set"))
+			{
+				iZone = int.Parse(strTopic.Substring(14, 1));
+
+				switch (strPayload)
+				{
+					case "off":
+						Que.ChangeZone(lRequestId, iZone, false);
+
+						break;
+
+					case "auto":
+						Que.ChangeZone(lRequestId, iZone, true);
+						Que.ChangeMode(lRequestId, AirConditionerMode.Automatic);
+
+						break;
+
+					case "cool":
+						Que.ChangeZone(lRequestId, iZone, true); 
+						Que.ChangeMode(lRequestId, AirConditionerMode.Cool);
+
+						break;
+
+					case "heat":
+						Que.ChangeZone(lRequestId, iZone, true); 
+						Que.ChangeMode(lRequestId, AirConditionerMode.Heat);
+
+						break;
+
+					case "fan_only":
+						Que.ChangeZone(lRequestId, iZone, true); 
+						Que.ChangeMode(lRequestId, AirConditionerMode.Fan_Only);
+
+						break;
+				}
+			}
+			// Zone
+			else if (strTopic.StartsWith("actronque/zone") && strTopic.EndsWith("/set"))
 			{
 				iZone = int.Parse(strTopic.Substring(14, 1));
 
 				Que.ChangeZone(lRequestId, iZone, strPayload == "ON" ? true : false);
 			}
+			// Master
 			else
 			{
 				switch (strTopic)
 				{
+					// Mode
 					case "actronque/mode/set":
 						switch (strPayload)
 						{
@@ -134,6 +182,7 @@ namespace HMX.HASSActronQue
 
 						break;
 
+					// Fan Speed
 					case "actronque/fan/set":
 						switch (strPayload)
 						{
@@ -160,9 +209,10 @@ namespace HMX.HASSActronQue
 
 						break;
 
+					// Temperature
 					case "actronque/temperature/set":
 						if (double.TryParse(strPayload, out dblTemperature))
-							Que.ChangeTemperature(lRequestId, dblTemperature);
+							Que.ChangeTemperature(lRequestId, dblTemperature, 0);
 
 						break;
 				}

@@ -1119,7 +1119,7 @@ namespace HMX.HASSActronQue
 
 				if (_bPerZoneControls)
 				{
-					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "{{\"name\":\"{0} {3}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"temperature_command_topic\":\"actronque/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque/zone{1}/settemperature\",\"mode_state_topic\":\"actronque/zone{1}/mode\",\"current_temperature_topic\":\"actronque/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", _airConditionerZones[iZone].Name, iZone, Service.ServiceName.ToLower(), _strAirConditionerName);
+					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "{{\"name\":\"{0} {3}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"mode_command_topic\":\"actronque/zone{1}/mode/set\",\"temperature_command_topic\":\"actronque/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque/zone{1}/settemperature\",\"mode_state_topic\":\"actronque/zone{1}/mode\",\"current_temperature_topic\":\"actronque/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", _airConditionerZones[iZone].Name, iZone, Service.ServiceName.ToLower(), _strAirConditionerName);
 					MQTT.Subscribe("actronque/zone{0}/temperature/set", iZone);
 				}
 				else
@@ -1395,35 +1395,65 @@ namespace HMX.HASSActronQue
 			AddCommandToQueue(command);
 		}
 
-		public static void ChangeTemperature(long lRequestId, double dblTemperature)
+		public static void ChangeTemperature(long lRequestId, double dblTemperature, int iZone)
 		{
 			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
-			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Temperature: {1}", lRequestId.ToString("X8"), dblTemperature);
+			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Zone: {1}, Temperature: {2}", lRequestId.ToString("X8"), iZone, dblTemperature);
 
-			switch (_airConditionerData.Mode)
+			if (iZone == 0)
 			{
-				case "OFF":
-					return;
+				switch (_airConditionerData.Mode)
+				{
+					case "OFF":
+						return;
 
-				case "FAN":
-					return;
+					case "FAN":
+						return;
+						
+					case "COOL":
+						command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
 
-				case "COOL":
-					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
+						break;
 
-					break;
+					case "HEAT":
+						command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
 
-				case "HEAT":
-					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
+						break;
 
-					break;
+					case "AUTO":
+						// TBA
+						return;
 
-				case "AUTO":
-					// TBA
-					return;
+						// break;
+				}
+			}
+			else
+			{
+				switch (_airConditionerData.Mode)
+				{
+					case "OFF":
+						return;
 
-					// break;
+					case "FAN":
+						return;
+
+					case "COOL":
+						command.Data.command.Add(string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZone - 1), dblTemperature);
+
+						break;
+
+					case "HEAT":
+						command.Data.command.Add(string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZone - 1), dblTemperature);
+
+						break;
+						
+					case "AUTO":
+						// TBA
+						return;
+
+						// break;
+				}
 			}
 
 			command.Data.command.Add("type", "set-settings");
