@@ -31,6 +31,7 @@ namespace HMX.HASSActronQue
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 10; // Seconds
 		private static int _iCommandExpiry = 10; // Seconds
+		private static int _iPostCommandSleepTimer = 2; // Seconds
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
 		private static AutoResetEvent _eventQueue = new AutoResetEvent(false);
@@ -983,6 +984,8 @@ namespace HMX.HASSActronQue
 					case 1: // Pull Update
 						Logging.WriteDebugLog("Que.AirConditionerMonitor() Quick Update");
 
+						Thread.Sleep(_iPostCommandSleepTimer * 1000);
+
 						if (await GetAirConditionerEvents())
 						{
 							MQTTUpdateData();
@@ -1132,6 +1135,7 @@ namespace HMX.HASSActronQue
 				{
 					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "{{\"name\":\"{0} {3}\",\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"mode_command_topic\":\"actronque/zone{1}/mode/set\",\"temperature_command_topic\":\"actronque/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque/zone{1}/settemperature\",\"mode_state_topic\":\"actronque/zone{1}/mode\",\"current_temperature_topic\":\"actronque/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", _airConditionerZones[iZone].Name, iZone, Service.ServiceName.ToLower(), _strAirConditionerName);
 					MQTT.Subscribe("actronque/zone{0}/temperature/set", iZone);
+					MQTT.Subscribe("actronque/zone{0}/mode/set", iZone);
 				}
 				else
 					MQTT.SendMessage(string.Format("homeassistant/climate/actronque/zone{0}/config", iZone), "");
