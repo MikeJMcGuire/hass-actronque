@@ -28,10 +28,12 @@ namespace HMX.HASSActronQue
 		private static HttpClient _httpClient = null, _httpClientAuth = null, _httpClientCommands = null;
 		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 15; // Seconds
+		private static int _iPollIntervalUpdate = 5; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 10; // Seconds
 		private static int _iCommandExpiry = 10; // Seconds
 		private static int _iPostCommandSleepTimer = 2; // Seconds
+		private static int _iCommandAckRetryCounter = 2;
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
 		private static AutoResetEvent _eventQueue = new AutoResetEvent(false);
@@ -41,6 +43,7 @@ namespace HMX.HASSActronQue
 		private static AirConditionerData _airConditionerData = new AirConditionerData();
 		private static Dictionary<int, AirConditionerZone> _airConditionerZones = new Dictionary<int, AirConditionerZone>();
 		private static object _oLockData = new object(), _oLockQueue = new object();
+		private static bool _bCommandAckPending = false;
 
 		public static DateTime LastUpdate
 		{
@@ -634,6 +637,13 @@ namespace HMX.HASSActronQue
 
 						switch (strEventType)
 						{
+							case "cmd-acked":
+								// Clear Command Pending Flag
+								if (_bCommandAckPending)
+									_bCommandAckPending = false;
+
+								break;
+
 							case "status-change-broadcast":
 								foreach (JProperty change in jsonResponse.events[iEvent].data)
 								{
@@ -965,7 +975,7 @@ namespace HMX.HASSActronQue
 		private async static void AirConditionerMonitor()
 		{
 			WaitHandle[] waitHandles = new WaitHandle[] { _eventStop , _eventUpdate };
-			int iWaitHandle = 0, iWaitInterval = 5;
+			int iWaitHandle = 0, iWaitInterval = 5, iCommandAckRetries = 0;
 			bool bExit = false;
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor()");
@@ -983,6 +993,9 @@ namespace HMX.HASSActronQue
 
 					case 1: // Pull Update
 						Logging.WriteDebugLog("Que.AirConditionerMonitor() Quick Update");
+
+						_bCommandAckPending = true;
+						iCommandAckRetries = _iCommandAckRetryCounter;
 
 						Thread.Sleep(_iPostCommandSleepTimer * 1000);
 
@@ -1015,7 +1028,18 @@ namespace HMX.HASSActronQue
 						break;
 				}
 
-				iWaitInterval = _iPollInterval;
+				if (iCommandAckRetries > 0)
+				{
+					iWaitInterval = _iPollIntervalUpdate;
+
+					if (iCommandAckRetries-- == 0)
+					{
+						Logging.WriteDebugLog("Que.AirConditionerMonitor() Clearing Update Flag");
+						_bCommandAckPending = false;
+					}
+				}
+				else
+					iWaitInterval = _iPollInterval;
 			}
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor() Complete");
