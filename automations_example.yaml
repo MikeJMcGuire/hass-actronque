@@ -1,5 +1,5 @@
 
-## Example of a rule turn whole system off if no-one home
+## Example of a rule to turn the whole system off if no-one home
 
 ## Turns off the system when last person leaves
 - id: '1598829571142'
