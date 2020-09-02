@@ -1,0 +1,241 @@
+
+## Example of a rule turn whole system off if no-one home
+
+## Turns off the system when last person leaves
+- id: '1598829571142'
+  alias: Aircon Off - No-one Home
+  description: If everyone leaves home, turn off air conditioner
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - condition: state
+    entity_id: group.family_presence
+    state: not_home
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: climate
+    entity_id: climate.air_conditioner
+    hvac_mode: 'off'
+    type: set_hvac_mode
+  mode: single
+
+
+## Example of rules for a specific zone that is used during weekdays only
+
+## Turns on the zone if between operating hours, it's a weekday & the temp goes above limit, changes mode to cooling and sets temp, but only if someone is home
+- id: '1598846835354'
+  alias: Study Zone - Turn on (High Temp)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - after: 06:45
+    before: '23:00'
+    condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: group.family_presence
+      state: home
+  - condition: and
+    conditions:
+    - above: 26
+      condition: device
+      device_id: 0861677668cf4a4ab43d82debb1ed1be
+      domain: sensor
+      entity_id: sensor.study
+      type: is_value
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.study_zone
+    type: turn_on
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: climate
+    entity_id: climate.air_conditioner
+    hvac_mode: cool
+    type: set_hvac_mode
+  - data:
+      entity_id: climate.study_air_conditioner
+      temperature: 24
+    service: climate.set_temperature
+  mode: single
+- id: '1598847734055'
+  alias: Study Zone - Turn off (Temp Reached)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - above: '22.9'
+    below: '24.5'
+    condition: numeric_state
+    entity_id: sensor.study
+  - after: 06:45
+    before: '23:00'
+    condition: time
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.study_zone
+    type: turn_off
+  mode: single
+
+## Turns on the zone if between operating hours, it's a weekday & the temp goes below limit, changes mode to heating and sets temp, but only if someone is home
+- id: '1599025572974'
+  alias: Study Zone - Turn on (Low Temp)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - after: 06:45
+    before: '23:00'
+    condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: group.family_presence
+      state: home
+  - condition: and
+    conditions:
+    - below: 20
+      condition: device
+      device_id: 0861677668cf4a4ab43d82debb1ed1be
+      domain: sensor
+      entity_id: sensor.study
+      type: is_value
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.study_zone
+    type: turn_on
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: climate
+    entity_id: climate.air_conditioner
+    hvac_mode: heat
+    type: set_hvac_mode
+  - data:
+      entity_id: climate.study_air_conditioner
+      temperature: 23
+    service: climate.set_temperature
+  mode: single
+
+## Example of rules for a specific zone for someone that may or may not be at home and turning on or off accordingly
+
+## Turns off the zone if the temp range is reached or they are no longer home
+- id: '1598914675359'
+  alias: Daughter's Room Zone - Turn off (Temp Reached or Not Home)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - above: '22.9'
+    below: '24.5'
+    condition: numeric_state
+    entity_id: sensor.daughter_s_room
+  - condition: or
+    conditions:
+    - condition: template
+      value_template: '{{ not states(''person.daughter'') == ''home''}}'
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.daughter_s_room_zone
+    type: turn_off
+  mode: single
+
+## Turns on the zone if between operating hours & the temp goes above limit, changes mode to cooling and sets temp, but only if they are home
+- id: '1598914564415'
+  alias: Daughter's Room Zone - Turn on (High Temp)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - after: 06:45
+    before: '23:00'
+    condition: time
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: person.daughter
+      state: home
+  - condition: and
+    conditions:
+    - above: 26
+      condition: device
+      device_id: 0861677668cf4a4ab43d82debb1ed1be
+      domain: sensor
+      entity_id: sensor.daughter_s_room
+      type: is_value
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.daughter_s_room_zone
+    type: turn_on
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: climate
+    entity_id: climate.air_conditioner
+    hvac_mode: cool
+    type: set_hvac_mode
+  - data:
+      entity_id: climate.daughter_s_room_air_conditioner
+      temperature: 24
+    service: climate.set_temperature
+  mode: single
+
+## Turns on the zone if between operating hours & the temp goes below limit, changes mode to heating and sets temp, but only if they are home
+- id: '1599027324555'
+  alias: Daughter's Room Zone - Turn on (Low Temp)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - after: '6:45'
+    before: '23:00'
+    condition: time
+  - condition: and
+    conditions:
+    - below: 20
+      condition: device
+      device_id: 0861677668cf4a4ab43d82debb1ed1be
+      domain: sensor
+      entity_id: sensor.daughter_s_room
+      type: is_value
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: person.daughter
+      state: home
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.daughter_s_room_zone
+    type: turn_on
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: climate
+    entity_id: climate.air_conditioner
+    hvac_mode: heat
+    type: set_hvac_mode
+  - data:
+      entity_id: climate.daughter_s_room_air_conditioner
+      temperature: 23
+    service: climate.set_temperature
+  mode: single
