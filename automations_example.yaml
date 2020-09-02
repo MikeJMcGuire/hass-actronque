@@ -23,6 +23,27 @@
 
 ## Example of rules for a specific zone that is used during weekdays only
 
+## Turns off the zone if the temp range is reached
+- id: '1598847734055'
+  alias: Study Zone - Turn off (Temp Reached)
+  description: ''
+  trigger:
+  - minutes: /1
+    platform: time_pattern
+  condition:
+  - condition: and
+    conditions:
+    - above: '22.9'
+      below: '24.5'
+      condition: numeric_state
+      entity_id: sensor.study
+  action:
+  - device_id: 0861677668cf4a4ab43d82debb1ed1be
+    domain: switch
+    entity_id: switch.study_zone
+    type: turn_off
+  mode: single
+
 ## Turns on the zone if between operating hours, it's a weekday & the temp goes above limit, changes mode to cooling and sets temp, but only if someone is home
 - id: '1598846835354'
   alias: Study Zone - Turn on (High Temp)
@@ -31,22 +52,20 @@
   - minutes: /1
     platform: time_pattern
   condition:
-  - after: 06:45
-    before: '23:00'
-    condition: time
-    weekday:
-    - mon
-    - tue
-    - wed
-    - thu
-    - fri
   - condition: and
     conditions:
     - condition: state
       entity_id: group.family_presence
       state: home
-  - condition: and
-    conditions:
+    - after: 06:45
+      before: '23:00'
+      condition: time
+      weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
     - above: 26
       condition: device
       device_id: 0861677668cf4a4ab43d82debb1ed1be
@@ -68,26 +87,7 @@
       temperature: 24
     service: climate.set_temperature
   mode: single
-- id: '1598847734055'
-  alias: Study Zone - Turn off (Temp Reached)
-  description: ''
-  trigger:
-  - minutes: /1
-    platform: time_pattern
-  condition:
-  - above: '22.9'
-    below: '24.5'
-    condition: numeric_state
-    entity_id: sensor.study
-  - after: 06:45
-    before: '23:00'
-    condition: time
-  action:
-  - device_id: 0861677668cf4a4ab43d82debb1ed1be
-    domain: switch
-    entity_id: switch.study_zone
-    type: turn_off
-  mode: single
+
 
 ## Turns on the zone if between operating hours, it's a weekday & the temp goes below limit, changes mode to heating and sets temp, but only if someone is home
 - id: '1599025572974'
@@ -97,22 +97,20 @@
   - minutes: /1
     platform: time_pattern
   condition:
-  - after: 06:45
-    before: '23:00'
-    condition: time
-    weekday:
-    - mon
-    - tue
-    - wed
-    - thu
-    - fri
   - condition: and
     conditions:
     - condition: state
       entity_id: group.family_presence
       state: home
-  - condition: and
-    conditions:
+    - after: 06:45
+      before: '23:00'
+      condition: time
+      weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
     - below: 20
       condition: device
       device_id: 0861677668cf4a4ab43d82debb1ed1be
@@ -138,21 +136,22 @@
 ## Example of rules for a specific zone for someone that may or may not be at home and turning on or off accordingly
 
 ## Turns off the zone if the temp range is reached or they are no longer home
-- id: '1598914675359'
+- id: '1598914776126'
   alias: Daughter's Room Zone - Turn off (Temp Reached or Not Home)
   description: ''
   trigger:
   - minutes: /1
     platform: time_pattern
   condition:
-  - above: '22.9'
-    below: '24.5'
-    condition: numeric_state
-    entity_id: sensor.daughter_s_room
   - condition: or
     conditions:
-    - condition: template
-      value_template: '{{ not states(''person.daughter'') == ''home''}}'
+    - above: '22.9'
+      below: '24.5'
+      condition: numeric_state
+      entity_id: sensor.daughter_s_room
+    - condition: state
+      entity_id: person.daughter
+      state: not_home
   action:
   - device_id: 0861677668cf4a4ab43d82debb1ed1be
     domain: switch
@@ -161,23 +160,21 @@
   mode: single
 
 ## Turns on the zone if between operating hours & the temp goes above limit, changes mode to cooling and sets temp, but only if they are home
-- id: '1598914564415'
-  alias: Daughter's Room Zone - Turn on (High Temp)
+- id: '1598914891429'
+  alias: Daughter's Room Zone - Turn On (High Temp)
   description: ''
   trigger:
   - minutes: /1
     platform: time_pattern
   condition:
-  - after: 06:45
-    before: '23:00'
-    condition: time
   - condition: and
     conditions:
     - condition: state
       entity_id: person.daughter
       state: home
-  - condition: and
-    conditions:
+    - after: '6:45'
+      before: '23:00'
+      condition: time
     - above: 26
       condition: device
       device_id: 0861677668cf4a4ab43d82debb1ed1be
@@ -208,9 +205,6 @@
   - minutes: /1
     platform: time_pattern
   condition:
-  - after: '6:45'
-    before: '23:00'
-    condition: time
   - condition: and
     conditions:
     - below: 20
@@ -219,8 +213,9 @@
       domain: sensor
       entity_id: sensor.daughter_s_room
       type: is_value
-  - condition: and
-    conditions:
+    - after: '6:45'
+      before: '23:00'
+      condition: time
     - condition: state
       entity_id: person.daughter
       state: home
