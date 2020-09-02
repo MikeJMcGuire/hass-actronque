@@ -57,7 +57,7 @@
     - condition: state
       entity_id: group.family_presence
       state: home
-    - after: 06:45
+    - after: '6:45'
       before: '23:00'
       condition: time
       weekday:
@@ -102,7 +102,7 @@
     - condition: state
       entity_id: group.family_presence
       state: home
-    - after: 06:45
+    - after: '6:45'
       before: '23:00'
       condition: time
       weekday:
