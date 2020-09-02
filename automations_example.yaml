@@ -6,7 +6,7 @@
   alias: Aircon Off - No-one Home
   description: If everyone leaves home, turn off air conditioner
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: state
@@ -28,7 +28,7 @@
   alias: Study Zone - Turn off (Temp Reached)
   description: ''
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: and
@@ -49,7 +49,7 @@
   alias: Study Zone - Turn on (High Temp)
   description: ''
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: and
@@ -94,7 +94,7 @@
   alias: Study Zone - Turn on (Low Temp)
   description: ''
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: and
@@ -140,7 +140,7 @@
   alias: Daughter's Room Zone - Turn off (Temp Reached or Not Home)
   description: ''
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: or
@@ -164,7 +164,7 @@
   alias: Daughter's Room Zone - Turn On (High Temp)
   description: ''
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: and
@@ -202,7 +202,7 @@
   alias: Daughter's Room Zone - Turn on (Low Temp)
   description: ''
   trigger:
-  - minutes: /1
+  - minutes: /5
     platform: time_pattern
   condition:
   - condition: and
