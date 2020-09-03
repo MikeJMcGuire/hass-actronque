@@ -1,5 +1,12 @@
-
-## Example of a rule to turn the whole system off if no-one home
+##
+## These are example rules primarily setup via wizard in Configuration/Automations, but with some YAML adjustments.
+##
+## Things you will need to edit if you copy this to your automations.yaml file:
+##   - group.family_presence : a group I created combining all presence devices/people into one
+##   - device_id's won't match your system - you'll need to select your devices
+##   - entity_id's likely won't match unless you've named them the same way I did :)
+##
+## // Example of a rule to turn the whole system off if no-one home //
 
 ## Turns off the system when last person leaves
 - id: '1598829571142'
@@ -21,7 +28,7 @@
   mode: single
 
 
-## Example of rules for a specific zone that is used during weekdays only
+## // Example of rules for a specific zone that is used during weekdays only //
 
 ## Turns off the zone if the temp range is reached
 - id: '1598847734055'
@@ -133,7 +140,7 @@
     service: climate.set_temperature
   mode: single
 
-## Example of rules for a specific zone for someone that may or may not be at home and turning on or off accordingly
+## // Example of rules for a specific zone for someone that may or may not be at home and turning on or off accordingly //
 
 ## Turns off the zone if the temp range is reached or they are no longer home
 - id: '1598914776126'
