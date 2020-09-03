@@ -6,6 +6,7 @@
 ##   - device_id's won't match your system - you'll need to select your devices
 ##   - entity_id's likely won't match unless you've named them the same way I did :)
 ##
+
 ## // Example of a rule to turn the whole system off if no-one home //
 
 ## Turns off the system when last person leaves
