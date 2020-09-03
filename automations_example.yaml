@@ -111,7 +111,7 @@
       - wed
       - thu
       - fri
-    - below: 20
+    - below: 18
       condition: device
       device_id: 0861677668cf4a4ab43d82debb1ed1be
       domain: sensor
@@ -207,7 +207,7 @@
   condition:
   - condition: and
     conditions:
-    - below: 20
+    - below: 18
       condition: device
       device_id: 0861677668cf4a4ab43d82debb1ed1be
       domain: sensor
