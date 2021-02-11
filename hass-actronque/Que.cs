@@ -13,7 +13,9 @@ namespace HMX.HASSActronQue
 {
 	public class Que
 	{
-		private static string _strBaseURL = "https://que.actronair.com.au";
+		private static string _strBaseURLQue = "https://que.actronair.com.au";
+		private static string _strBaseURLNeo = "https://nimbus.actronair.com.au";
+		private static string _strSystemType;
 		//private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00)";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
@@ -62,22 +64,22 @@ namespace HMX.HASSActronQue
 			_httpClientAuth = new HttpClient(httpClientHandler);
 
 			//_httpClientAuth.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClientAuth.BaseAddress = new Uri(_strBaseURL);
+			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
 
 			_httpClient = new HttpClient(httpClientHandler);
 
 			//_httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
 			//_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClient.BaseAddress = new Uri(_strBaseURL);
+			_httpClient.BaseAddress = new Uri(GetBaseURL());
 
 			_httpClientCommands = new HttpClient(httpClientHandler);
 
 			//_httpClientCommands.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
 			//_httpClientCommands.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClientCommands.BaseAddress = new Uri(_strBaseURL);
+			_httpClientCommands.BaseAddress = new Uri(GetBaseURL());
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iPollInterval, bool bPerZoneControls, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 
@@ -86,6 +88,7 @@ namespace HMX.HASSActronQue
 			_strQueUser = strQueUser;
 			_strQuePassword = strQuePassword;
 			_strSerialNumber = strSerialNumber;
+			_strSystemType = strSystemType;
 			_bPerZoneControls = bPerZoneControls;
 			_iPollInterval = iPollInterval;
 			_eventStop = eventStop;
@@ -141,7 +144,7 @@ namespace HMX.HASSActronQue
 			dynamic jsonResponse;
 			bool bRetVal = true;
 
-			Logging.WriteDebugLog("Que.GeneratePairingToken() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _strBaseURL, strPageURL);
+			Logging.WriteDebugLog("Que.GeneratePairingToken() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), GetBaseURL(), strPageURL);
 
 			if (_strDeviceUniqueIdentifier == "")
 			{
@@ -240,7 +243,7 @@ namespace HMX.HASSActronQue
 			dynamic jsonResponse;
 			bool bRetVal = true;
 
-			Logging.WriteDebugLog("Que.GenerateBearerToken() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _strBaseURL, strPageURL);
+			Logging.WriteDebugLog("Que.GenerateBearerToken() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _httpClientAuth.BaseAddress, strPageURL);
 
 			dtFormContent.Add("grant_type", "refresh_token");
 			dtFormContent.Add("refresh_token", _pairingToken.Token);
@@ -387,13 +390,13 @@ namespace HMX.HASSActronQue
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
 			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL = "/api/v0/client/ac-systems";
+			string strPageURL = "/api/v0/client/ac-systems?includeAcms=true&includeNeo=true"; // "/api/v0/client/ac-systems";
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			string strSerial, strDescription;
+			string strSerial, strDescription, strType;
 
-			Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _strBaseURL, strPageURL);
+			Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL);
 
 			if (!IsTokenValid())
 			{
@@ -422,12 +425,13 @@ namespace HMX.HASSActronQue
 					{
 						strSerial = jsonResponse._embedded.acsystem[iIndex].serial.ToString();
 						strDescription = jsonResponse._embedded.acsystem[iIndex].description.ToString();
+						strType = jsonResponse._embedded.acsystem[iIndex].type.ToString();
 
-						Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Found AC: {1} - {2}", lRequestId.ToString("X8"), strSerial, strDescription);
+						Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Found AC: {1} - {2} ({3})", lRequestId.ToString("X8"), strSerial, strDescription, strType);
 
 						if (_strSerialNumber == "")
 						{
-							Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Defaulting to AC: {1} - {2}", lRequestId.ToString("X8"), strSerial, strDescription);
+							Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Defaulting to AC: {1} - {2} ({3})", lRequestId.ToString("X8"), strSerial, strDescription, strType);
 							_strSerialNumber = strSerial;
 						}						
 					}
@@ -487,7 +491,7 @@ namespace HMX.HASSActronQue
 			Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
 			AirConditionerZone zone;
 
-			Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _strBaseURL, strPageURL, _strSerialNumber);
+			Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
 
 			if (!IsTokenValid())
 			{
@@ -594,7 +598,7 @@ namespace HMX.HASSActronQue
 			else
 				strPageURL = _strNextEventURL;
 
-			Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _strBaseURL, strPageURL);
+			Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL);
 
 			if (!IsTokenValid())
 			{
@@ -1512,7 +1516,7 @@ namespace HMX.HASSActronQue
 			string strPageURL = "/api/v0/client/ac-systems/cmds/send?serial=";
 			bool bRetVal = true;
 
-			Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _strBaseURL, strPageURL, _strSerialNumber);
+			Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
 
 			try
 			{
@@ -1592,6 +1596,16 @@ namespace HMX.HASSActronQue
 				sbDeviceId.Append(random.Next(0, 9));
 
 			return sbDeviceId.ToString();
+		}
+
+		private static string GetBaseURL()
+		{
+			switch (_strSystemType)
+			{
+				case "que": return _strBaseURLQue;
+				case "neo": return _strBaseURLNeo;
+				default: return _strBaseURLQue;
+			}
 		}
 	}
 }
