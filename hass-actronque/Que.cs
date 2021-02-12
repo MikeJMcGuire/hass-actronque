@@ -35,7 +35,7 @@ namespace HMX.HASSActronQue
 		private static int _iQueueInterval = 10; // Seconds
 		private static int _iCommandExpiry = 10; // Seconds
 		private static int _iPostCommandSleepTimer = 2; // Seconds
-		private static int _iCommandAckRetryCounter = 2;
+		private static int _iCommandAckRetryCounter = 3;
 		private static int _iMaxZones = 8;
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
@@ -1052,6 +1052,12 @@ namespace HMX.HASSActronQue
 						_bCommandAckPending = false;
 					}
 				}
+				else if (!_bCommandAckPending && iCommandAckRetries > 0)
+				{
+					Logging.WriteDebugLog("Que.AirConditionerMonitor() Post Command Update");
+					iWaitInterval = _iPollIntervalUpdate;
+					iCommandAckRetries = 0;
+				}
 				else
 					iWaitInterval = _iPollInterval;
 			}
@@ -1396,7 +1402,7 @@ namespace HMX.HASSActronQue
 
 					command.Data.command.Add("UserAirconSettings.EnabledZones", sbZones.ToString().ToLower());
 
-					Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zones: {1}", lRequestId.ToString("X8"), sbZones.ToString().ToLower());
+					// Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zones: {1}", lRequestId.ToString("X8"), sbZones.ToString().ToLower());
 
 					break;
 
