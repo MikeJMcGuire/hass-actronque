@@ -1379,14 +1379,14 @@ namespace HMX.HASSActronQue
 
 					lock (_oLockData)
 					{
-						for (int iIndex = 0; iIndex < _airConditionerZones.Count; iIndex++)
+						for (int iIndex = 1; iIndex <= _airConditionerZones.Count; iIndex++)
 						{
 							if (iIndex == iZone)
 								sbZones.Append(bState);
 							else
 								sbZones.Append(_airConditionerZones[iIndex].State);
 
-							if (iIndex < (_airConditionerZones.Count - 1))
+							if (iIndex < _airConditionerZones.Count)
 								sbZones.Append(',');
 						}
 					}
