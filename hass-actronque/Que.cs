@@ -1367,7 +1367,8 @@ namespace HMX.HASSActronQue
 
 		public static void ChangeZone(long lRequestId, int iZone, bool bState)
 		{
-			StringBuilder sbZones;
+			//StringBuilder sbZones;
+			bool[] bZones;
 			QueueCommand command = new QueueCommand(lRequestId, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zone {1}: {2}", lRequestId.ToString("X8"), iZone, bState ? "On" : "Off");
@@ -1381,7 +1382,7 @@ namespace HMX.HASSActronQue
 					break;
 
 				case "neo":
-					sbZones = new StringBuilder();
+					/*sbZones = new StringBuilder();
 					sbZones.Append('[');
 
 					lock (_oLockData)
@@ -1400,7 +1401,19 @@ namespace HMX.HASSActronQue
 
 					sbZones.Append(']');
 
-					command.Data.command.Add("UserAirconSettings.EnabledZones", sbZones.ToString().ToLower());
+					command.Data.command.Add("UserAirconSettings.EnabledZones", sbZones.ToString().ToLower());*/
+
+					bZones = new bool[] { false, false, false, false, false, false, false, false };
+
+					for (int iIndex = 0; iIndex < bZones.Length; iIndex++)
+					{
+						if ((iIndex + 1) == iZone)
+							bZones[iIndex] = bState;
+						else
+							bZones[iIndex] = (_airConditionerZones.ContainsKey(iIndex + 1) ? _airConditionerZones[iIndex + 1].State : false);
+					}
+
+					command.Data.command.Add("UserAirconSettings.EnabledZones", bZones);
 
 					// Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zones: {1}", lRequestId.ToString("X8"), sbZones.ToString().ToLower());
 
