@@ -65,7 +65,9 @@ namespace HMX.HASSActronQue
 			if (!Configuration.GetPrivateConfiguration(configuration, "QuePassword", out strQuePassword))
 				return;
 			Configuration.GetOptionalConfiguration(configuration, "QueSerial", out strQueSerial);
-			if (!Configuration.GetOptionalConfiguration(configuration, "SystemType", out strSystemType))
+			
+			Configuration.GetOptionalConfiguration(configuration, "SystemType", out strSystemType);
+			if (strSystemType == "")
 			{
 				Logging.WriteDebugLog("Service.Start() System Type not specified, defaulting to que.");
 				strSystemType = "que";
