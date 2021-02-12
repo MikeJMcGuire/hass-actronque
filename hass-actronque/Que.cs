@@ -76,7 +76,7 @@ namespace HMX.HASSActronQue
 
 			//_httpClientCommands.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
 			//_httpClientCommands.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClientCommands.BaseAddress = new Uri(GetBaseURL());
+			
 		}
 
 		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, ManualResetEvent eventStop)
@@ -95,6 +95,7 @@ namespace HMX.HASSActronQue
 
 			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
 			_httpClient.BaseAddress = new Uri(GetBaseURL());
+			_httpClientCommands.BaseAddress = new Uri(GetBaseURL());
 
 			// Get Device Id
 			try
@@ -634,6 +635,8 @@ namespace HMX.HASSActronQue
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
 					_strNextEventURL = jsonResponse._links.acnewerevents.href;
+					if (_strNextEventURL.StartsWith("/"))
+						_strNextEventURL = _strNextEventURL.Substring(1);
 
 					Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Next Event URL: {1}", lRequestId.ToString("X8"), _strNextEventURL);
 
