@@ -13,8 +13,8 @@ namespace HMX.HASSActronQue
 {
 	public class Que
 	{
-		private static string _strBaseURLQue = "https://que.actronair.com.au";
-		private static string _strBaseURLNeo = "https://nimbus.actronair.com.au";
+		private static string _strBaseURLQue = "https://que.actronair.com.au/";
+		private static string _strBaseURLNeo = "https://nimbus.actronair.com.au/";
 		private static string _strSystemType;
 		//private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00)";
 		private static string _strDeviceName = "HASSActronQue";
@@ -142,7 +142,7 @@ namespace HMX.HASSActronQue
 			CancellationTokenSource cancellationToken = null;
 			Dictionary<string, string> dtFormContent = new Dictionary<string, string>();
 			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL = "/api/v0/client/user-devices";
+			string strPageURL = "api/v0/client/user-devices";
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
@@ -241,7 +241,7 @@ namespace HMX.HASSActronQue
 			Dictionary<string, string> dtFormContent = new Dictionary<string, string>();
 			QueToken queToken = null;
 			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL = "/api/v0/oauth/token";
+			string strPageURL = "api/v0/oauth/token";
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
@@ -393,7 +393,7 @@ namespace HMX.HASSActronQue
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
 			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL = "/api/v0/client/ac-systems?includeAcms=true&includeNeo=true"; // "/api/v0/client/ac-systems";
+			string strPageURL = "api/v0/client/ac-systems?includeAcms=true&includeNeo=true"; // "/api/v0/client/ac-systems";
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
@@ -487,7 +487,7 @@ namespace HMX.HASSActronQue
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
 			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL = "/api/v0/client/ac-systems/status/latest?serial=";
+			string strPageURL = "api/v0/client/ac-systems/status/latest?serial=";
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
@@ -586,7 +586,7 @@ namespace HMX.HASSActronQue
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
 			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL, strPageURLFirstEvent = "/api/v0/client/ac-systems/events/latest?serial=";
+			string strPageURL, strPageURLFirstEvent = "api/v0/client/ac-systems/events/latest?serial=";
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
@@ -1516,7 +1516,7 @@ namespace HMX.HASSActronQue
 			CancellationTokenSource cancellationToken = null;
 			StringContent content;
 			long lRequestId = RequestManager.GetRequestId(command.RequestId);
-			string strPageURL = "/api/v0/client/ac-systems/cmds/send?serial=";
+			string strPageURL = "api/v0/client/ac-systems/cmds/send?serial=";
 			bool bRetVal = true;
 
 			Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
