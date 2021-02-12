@@ -36,6 +36,7 @@ namespace HMX.HASSActronQue
 		private static int _iCommandExpiry = 10; // Seconds
 		private static int _iPostCommandSleepTimer = 2; // Seconds
 		private static int _iCommandAckRetryCounter = 2;
+		private static int _iMaxZones = 8;
 		private static ManualResetEvent _eventStop;
 		private static AutoResetEvent _eventAuthenticationFailure = new AutoResetEvent(false);
 		private static AutoResetEvent _eventQueue = new AutoResetEvent(false);
@@ -1379,23 +1380,23 @@ namespace HMX.HASSActronQue
 
 					lock (_oLockData)
 					{
-						for (int iIndex = 1; iIndex <= _airConditionerZones.Count; iIndex++)
+						for (int iIndex = 1; iIndex <= _iMaxZones; iIndex++)
 						{
 							if (iIndex == iZone)
 								sbZones.Append(bState);
 							else
-								sbZones.Append(_airConditionerZones[iIndex].State);
+								sbZones.Append(_airConditionerZones.ContainsKey(iIndex) ? _airConditionerZones[iIndex].State : false);
 
-							if (iIndex < _airConditionerZones.Count)
+							if (iIndex < _iMaxZones)
 								sbZones.Append(',');
 						}
 					}
 
 					sbZones.Append(']');
 
-					command.Data.command.Add("UserAirconSettings.EnabledZones", sbZones.ToString());
+					command.Data.command.Add("UserAirconSettings.EnabledZones", sbZones.ToString().ToLower());
 
-					Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zones: {1}", lRequestId.ToString("X8"), sbZones.ToString());
+					Logging.WriteDebugLog("Que.ChangeZone() [0x{0}] Zones: {1}", lRequestId.ToString("X8"), sbZones.ToString().ToLower());
 
 					break;
 
