@@ -64,13 +64,13 @@ namespace HMX.HASSActronQue
 			_httpClientAuth = new HttpClient(httpClientHandler);
 
 			//_httpClientAuth.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
+			//_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
 
 			_httpClient = new HttpClient(httpClientHandler);
 
 			//_httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-AU;q=1");
 			//_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_strBaseUserAgent);
-			_httpClient.BaseAddress = new Uri(GetBaseURL());
+			//_httpClient.BaseAddress = new Uri(GetBaseURL());
 
 			_httpClientCommands = new HttpClient(httpClientHandler);
 
@@ -92,6 +92,9 @@ namespace HMX.HASSActronQue
 			_bPerZoneControls = bPerZoneControls;
 			_iPollInterval = iPollInterval;
 			_eventStop = eventStop;
+
+			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
+			_httpClient.BaseAddress = new Uri(GetBaseURL());
 
 			// Get Device Id
 			try
