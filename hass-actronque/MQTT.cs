@@ -70,7 +70,7 @@ namespace HMX.HASSActronQue
 				Logging.WriteDebugLog("MQTT.StartMQTT() Host: {0}", strMQTTBroker);
 			}
 
-			clientOptions = new MqttClientOptionsBuilder().WithClientId(_strClientId).WithTcpServer(strMQTTServer, (iPort == 0 ? null : iPort));
+			clientOptions = new MqttClientOptionsBuilder().WithClientId(_strClientId).WithTcpServer(strMQTTBroker, (iPort == 0 ? null : iPort));
 			if (strUser != "")
 				clientOptions = clientOptions.WithCredentials(strUser, strPassword);
 			if (bMQTTTLS)
