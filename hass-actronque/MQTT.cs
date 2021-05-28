@@ -24,6 +24,7 @@ namespace HMX.HASSActronQue
 		{
 			IManagedMqttClientOptions options;
 			MqttClientOptionsBuilder clientOptions;
+			MqttClientOptionsBuilderTlsParameters optionsTLS;
 			int iPort = 0;
 			string[] strMQTTServerArray;
 			string strMQTTBroker;
@@ -74,7 +75,18 @@ namespace HMX.HASSActronQue
 			if (strUser != "")
 				clientOptions = clientOptions.WithCredentials(strUser, strPassword);
 			if (bMQTTTLS)
-				clientOptions = clientOptions.WithTls();
+			{
+				optionsTLS = new MqttClientOptionsBuilderTlsParameters
+				{
+					IgnoreCertificateChainErrors = true,
+					UseTls = true,
+					IgnoreCertificateRevocationErrors = true,
+					AllowUntrustedCertificates = true,
+					SslProtocol = System.Security.Authentication.SslProtocols.Tls12
+				};
+
+				clientOptions = clientOptions.WithTls(optionsTLS);
+			}
 
 			options = new ManagedMqttClientOptionsBuilder().WithAutoReconnectDelay(TimeSpan.FromSeconds(5)).WithClientOptions(clientOptions.Build()).Build();
 			
