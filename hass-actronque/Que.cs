@@ -731,6 +731,19 @@ namespace HMX.HASSActronQue
 											}
 										}
 									}
+									// Live Humidity
+									else if (change.Name == "MasterInfo.LiveHumidity_pc")
+									{
+										if (!double.TryParse(change.Value.ToString(), out dblTemp))
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveHumidity_pc");
+										else
+										{
+											lock (_oLockData)
+											{
+												_airConditionerData.Humidity = dblTemp;
+											}
+										}
+									}
 									// Set Temperature Cooling
 									else if (change.Name == "UserAirconSettings.TemperatureSetpoint_Cool_oC")
 									{
@@ -904,6 +917,17 @@ namespace HMX.HASSActronQue
 									lock (_oLockData)
 									{
 										_airConditionerData.Temperature = dblTemp;
+									}
+								}
+
+								// Live Humidity
+								if (!double.TryParse(jsonResponse.events[iEvent].data.MasterInfo.LiveHumidity_pc.ToString(), out dblTemp))
+									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveHumidity_pc");
+								else
+								{
+									lock (_oLockData)
+									{
+										_airConditionerData.Humidity = dblTemp;
 									}
 								}
 
@@ -1194,6 +1218,7 @@ namespace HMX.HASSActronQue
 			Logging.WriteDebugLog("Que.MQTTRegister()");
 
 			MQTT.SendMessage("homeassistant/climate/actronque/config", "{{\"name\":\"{1}\",\"unique_id\":\"{0}-AC\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"MikeJMcGuire\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\",\"auto\"],\"mode_command_topic\":\"actronque/mode/set\",\"temperature_command_topic\":\"actronque/temperature/set\",\"fan_mode_command_topic\":\"actronque/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actronque/fanmode\",\"action_topic\":\"actronque/compressor\",\"temperature_state_topic\":\"actronque/settemperature\",\"mode_state_topic\":\"actronque/mode\",\"current_temperature_topic\":\"actronque/temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower(), _strAirConditionerName, Service.DeviceNameMQTT);
+			MQTT.SendMessage("homeassistant/sensor/actronquehumidity/config", "{{\"name\":\"{1} Humidity\",\"unique_id\":\"{0}-Humidity\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"MikeJMcGuire\"}},\"state_topic\":\"actronque/humidity\",\"device_class\":\"humidity\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower(), _strAirConditionerName, Service.DeviceNameMQTT);
 
 			foreach (int iZone in _airConditionerZones.Keys)
 			{
@@ -1263,6 +1288,9 @@ namespace HMX.HASSActronQue
 
 			// Temperature
 			MQTT.SendMessage("actronque/temperature", _airConditionerData.Temperature.ToString("N1"));
+
+			// Humidity
+			MQTT.SendMessage("actronque/humidity", _airConditionerData.Humidity.ToString("N1"));
 
 			// Power, Mode & Set Temperature
 			if (!_airConditionerData.On)
