@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.27] - 2021-08-30
+
+### Added
+- The outside temperature reading from the Master Controller is now presented as an entity.
+
 ## [v0.26] - 2021-08-01
 
 ### Updated
