@@ -1426,22 +1426,22 @@ namespace HMX.HASSActronQue
 						switch (_airConditionerData.Mode)
 						{
 							case "AUTO":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "auto" : "off");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "auto" : "off"));
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), GetSetTemperature(_airConditionerZones[iIndex].SetTemperatureHeating, _airConditionerZones[iIndex].SetTemperatureCooling).ToString("N1"));
 								break;
 
 							case "COOL":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "cool" : "off");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "cool" : "off"));
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), _airConditionerZones[iIndex].SetTemperatureCooling.ToString("N1"));
 								break;
 
 							case "HEAT":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "heat" : "off");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "heat" : "off"));
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), _airConditionerZones[iIndex].SetTemperatureHeating.ToString("N1"));
 								break;
 
 							case "FAN":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "fan_only" : "off");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "fan_only" : "off"));
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), GetSetTemperature(_airConditionerZones[iIndex].SetTemperatureHeating, _airConditionerZones[iIndex].SetTemperatureCooling).ToString("N1"));
 								break;
 
