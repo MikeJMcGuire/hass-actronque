@@ -13,9 +13,10 @@ namespace HMX.HASSActronQue
 		public double SetTemperatureCooling; // TemperatureSetpoint_Cool_oC
 		public double SetTemperatureHeating; // TemperatureSetpoint_Heat_oC
 		public double Temperature; // LiveTemp_oC
-		public double OutsideTemperature; // LiveOutdoorTemp_oC
+		public double OutdoorTemperature; // LiveOutdoorTemp_oC
 		public double Humidity; // LiveHumidity_pc
 		public string CompressorState; // CompressorMode
+		public double CompressorCapacity; // CompressorCapacity
 		public DateTime LastUpdated;
 	}
 }
