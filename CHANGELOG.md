@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - The compressor capacity reading from the Master Controller is now presented as an entity.
 - The zone position reading from each zone is now presented as an entity.
 
+### Changed
+- Zones that are off will now receive set temperature updates.
+
 ## [v0.26] - 2021-08-01
 
 ### Updated
