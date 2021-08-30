@@ -1411,12 +1411,12 @@ namespace HMX.HASSActronQue
 			{
 				MQTT.SendMessage(string.Format("actronque/zone{0}", iIndex), _airConditionerZones[iIndex].State ? "ON" : "OFF");
 				MQTT.SendMessage(string.Format("actronque/zone{0}/temperature", iIndex), _airConditionerZones[iIndex].Temperature.ToString());
-				MQTT.SendMessage(string.Format("actronque/zone{0}/position", iIndex), _airConditionerZones[iIndex].Position.ToString());
+				MQTT.SendMessage(string.Format("actronque/zone{0}/position", iIndex), (_airConditionerZones[iIndex].Position * 5).ToString()); // 0-20 numeric displayed as 0-100 percentage
 
 				// Per Zone Controls
 				if (_bPerZoneControls)
 				{
-					if (!_airConditionerData.On || !_airConditionerZones[iIndex].State)
+					if (!_airConditionerData.On)
 					{
 						MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), "off");
 						MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), GetSetTemperature(_airConditionerZones[iIndex].SetTemperatureHeating, _airConditionerZones[iIndex].SetTemperatureCooling).ToString("N1"));
@@ -1426,22 +1426,22 @@ namespace HMX.HASSActronQue
 						switch (_airConditionerData.Mode)
 						{
 							case "AUTO":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), "auto");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "auto" : "off");
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), GetSetTemperature(_airConditionerZones[iIndex].SetTemperatureHeating, _airConditionerZones[iIndex].SetTemperatureCooling).ToString("N1"));
 								break;
 
 							case "COOL":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), "cool");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "cool" : "off");
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), _airConditionerZones[iIndex].SetTemperatureCooling.ToString("N1"));
 								break;
 
 							case "HEAT":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), "heat");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "heat" : "off");
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), _airConditionerZones[iIndex].SetTemperatureHeating.ToString("N1"));
 								break;
 
 							case "FAN":
-								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), "fan_only");
+								MQTT.SendMessage(string.Format("actronque/zone{0}/mode", iIndex), (_airConditionerZones[iIndex].State ? "fan_only" : "off");
 								MQTT.SendMessage(string.Format("actronque/zone{0}/settemperature", iIndex), GetSetTemperature(_airConditionerZones[iIndex].SetTemperatureHeating, _airConditionerZones[iIndex].SetTemperatureCooling).ToString("N1"));
 								break;
 
