@@ -712,6 +712,8 @@ namespace HMX.HASSActronQue
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
 										else
 										{
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Debug (UserAirconSettings.Mode): {1}", lRequestId.ToString("X8"), strInput);
+
 											lock (_oLockData)
 											{
 												_airConditionerData.Mode = strInput;
@@ -792,6 +794,8 @@ namespace HMX.HASSActronQue
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Cool_oC");
 										else
 										{
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Debug (UserAirconSettings.TemperatureSetpoint_Cool_oC): {1}", lRequestId.ToString("X8"), dblTemp.ToString());
+
 											lock (_oLockData)
 											{
 												_airConditionerData.SetTemperatureCooling = dblTemp;
@@ -805,6 +809,8 @@ namespace HMX.HASSActronQue
 											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Heat_oC");
 										else
 										{
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Debug (UserAirconSettings.TemperatureSetpoint_Heat_oC): {1}", lRequestId.ToString("X8"), dblTemp.ToString());
+
 											lock (_oLockData)
 											{
 												_airConditionerData.SetTemperatureHeating = dblTemp;
@@ -945,6 +951,8 @@ namespace HMX.HASSActronQue
 									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
 								else
 								{
+									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Debug (UserAirconSettings.Mode): {1}", lRequestId.ToString("X8"), strInput);
+
 									lock (_oLockData)
 									{
 										_airConditionerData.Mode = strInput;
@@ -969,6 +977,8 @@ namespace HMX.HASSActronQue
 									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Cool_oC");
 								else
 								{
+									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Debug (UserAirconSettings.TemperatureSetpoint_Cool_oC): {1}", lRequestId.ToString("X8"), dblTemp.ToString());
+
 									lock (_oLockData)
 									{
 										_airConditionerData.SetTemperatureCooling = dblTemp;
@@ -980,6 +990,8 @@ namespace HMX.HASSActronQue
 									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Heat_oC");
 								else
 								{
+									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Debug (UserAirconSettings.TemperatureSetpoint_Heat_oC): {1}", lRequestId.ToString("X8"), dblTemp.ToString());
+
 									lock (_oLockData)
 									{
 										_airConditionerData.SetTemperatureHeating = dblTemp;
