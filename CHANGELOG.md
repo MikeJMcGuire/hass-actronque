@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2021.12.0] - 2021-12-02
+
+### Changed
+- Migrated from .NET 5.0 to .NET 6.0.
+- Changed version numbering scheme.
+
 ## [v0.30] - 2021-09-22
 
 ### Changed
