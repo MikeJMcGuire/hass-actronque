@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Migrated from .NET 5.0 to .NET 6.0.
 - Changed version numbering scheme.
+- Added logic to support the bearer token request returning BadRequest instead of Unauthorized, so that after a set number of attempts, the add-on will regenerate the pairing token.
 
 ## [v0.30] - 2021-09-22
 
