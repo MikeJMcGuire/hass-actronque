@@ -293,15 +293,15 @@ namespace HMX.HASSActronQue
 						// Increment Failed Request Counter
 						_iFailedBearerRequests++;
 
-						Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}. Attempt: {2} of {3}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase, _iFailedBearerRequests, _iFailedBearerRequestMaximum);
-
 						// Reset Pairing Token when Failed Request Counter reaches maximum.
 						if (_iFailedBearerRequests == _iFailedBearerRequestMaximum)
 						{
-							Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}. Refreshing pairing token.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+							Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}. Attempt: {2} of {3} - refreshing pairing token.", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase, _iFailedBearerRequests, _iFailedBearerRequestMaximum);
 
 							_pairingToken = null;
 						}
+						else
+							Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}. Attempt: {2} of {3}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase, _iFailedBearerRequests, _iFailedBearerRequestMaximum);
 					}
 					else
 						Logging.WriteDebugLogError("Que.GenerateBearerToken()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
