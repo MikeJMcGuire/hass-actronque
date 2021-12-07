@@ -1917,12 +1917,16 @@ namespace HMX.HASSActronQue
 				case "neo":
 					bZones = new bool[] { false, false, false, false, false, false, false, false };
 
+					// Temporarily set zone state to support subsequent zone changes before the next poll
+					if (_airConditionerZones.ContainsKey(iZone - 1))
+						_airConditionerZones[iZone - 1].State = bState;
+
 					for (int iIndex = 0; iIndex < bZones.Length; iIndex++)
 					{
-						if ((iIndex + 1) == iZone)
-							bZones[iIndex] = bState;
-						else
-							bZones[iIndex] = (_airConditionerZones.ContainsKey(iIndex + 1) ? _airConditionerZones[iIndex + 1].State : false);
+						//if ((iIndex + 1) == iZone)
+						//	bZones[iIndex] = bState;
+						//else
+						bZones[iIndex] = (_airConditionerZones.ContainsKey(iIndex + 1) ? _airConditionerZones[iIndex + 1].State : false);
 					}
 
 					command.Data.command.Add("UserAirconSettings.EnabledZones", bZones);
