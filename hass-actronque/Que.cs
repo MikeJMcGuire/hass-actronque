@@ -38,6 +38,7 @@ namespace HMX.HASSActronQue
 		private static int _iQueueInterval = 10; // Seconds
 		private static int _iCommandExpiry = 10; // Seconds
 		private static int _iPostCommandSleepTimer = 2; // Seconds
+		private static int _iPostCommandSleepTimerNeoNoEventsMode = 10; // Seconds
 		private static int _iCommandAckRetryCounter = 3;
 		private static int _iFailedBearerRequests = 0;
 		private static int _iFailedBearerRequestMaximum = 10; // Retries
@@ -1445,14 +1446,14 @@ namespace HMX.HASSActronQue
 					case 1: // Pull Update
 						Logging.WriteDebugLog("Que.AirConditionerMonitor() Quick Update");
 
-						_bCommandAckPending = true;
-						iCommandAckRetries = _iCommandAckRetryCounter;
-
-						Thread.Sleep(_iPostCommandSleepTimer * 1000);
-
 						// Normal Mode
 						if (!_bNeoNoEventMode)
 						{
+							_bCommandAckPending = true;
+							iCommandAckRetries = _iCommandAckRetryCounter;
+
+							Thread.Sleep(_iPostCommandSleepTimer * 1000);
+
 							if (await GetAirConditionerEvents())
 							{
 								MQTTUpdateData();
@@ -1462,6 +1463,8 @@ namespace HMX.HASSActronQue
 						// Neo No Events Mode
 						else
 						{
+							Thread.Sleep(_iPostCommandSleepTimerNeoNoEventsMode * 1000);
+
 							if (await GetAirConditionerFullStatus())
 							{
 								MQTTUpdateData();
