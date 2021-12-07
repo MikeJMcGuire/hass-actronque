@@ -605,8 +605,10 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
-			AirConditionerZone zone;
+			string strInput;
+			double dblTemp;
+			bool bTemp;
+			JArray aEnabledZones;
 
 			Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
 
@@ -627,44 +629,216 @@ namespace HMX.HASSActronQue
 				{
 					strResponse = await httpResponse.Content.ReadAsStringAsync();
 
-					Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
+					Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
+
+					strResponse = strResponse.Replace("<" + _strSerialNumber.ToUpper() + ">", "acsystem");
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
-					// Zones
-					for (int iZoneIndex = 0; iZoneIndex < jsonResponse.lastKnownState.RemoteZoneInfo.Count; iZoneIndex++)
+					// Compressor Mode
+					strInput = jsonResponse.lastKnownState.acsystem.LiveAircon.CompressorMode;
+					if (strInput == "")
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorMode");
+					else
 					{
-						if (bool.Parse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Exists.ToString()))
+						lock (_oLockData)
 						{
-							zone = new AirConditionerZone();
-
-							zone.Name = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Title;
-							if (zone.Name == "")
-								zone.Name = "Zone " + (iZoneIndex + 1);
-							zone.Temperature = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveTemp_oC;
-
-							Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, zone.Name);
-
-							dZones.Add(iZoneIndex + 1, zone);
+							_airConditionerData.CompressorState = strInput;
 						}
 					}
 
-					// Update Air Conditioner Data
-					lock (_oLockData)
+					// Compressor Capacity
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.LiveAircon.CompressorCapacity.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorCapacity");
+					else
 					{
-						_airConditionerZones = dZones;
+						lock (_oLockData)
+						{
+							_airConditionerData.CompressorCapacity = dblTemp;
+						}
+					}
+
+					// Compressor Power
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.LiveAircon.OutdoorUnit.CompPower.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.OutdoorUnit.CompPower");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.CompressorPower = dblTemp;
+						}
+					}
+
+					// On
+					if (!bool.TryParse(jsonResponse.lastKnownState.acsystem.UserAirconSettings.isOn.ToString(), out bTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.isOn");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.On = bTemp;
+						}
+					}
+
+					// Mode
+					strInput = jsonResponse.lastKnownState.acsystem.UserAirconSettings.Mode;
+					if (strInput == "")
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.Mode = strInput;
+						}
+					}
+
+					// Fan Mode
+					strInput = jsonResponse.lastKnownState.acsystem.UserAirconSettings.FanMode;
+					if (strInput == "")
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.FanMode");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.FanMode = strInput;
+							_airConditionerData.Continuous = strInput.EndsWith("CONT");
+						}
+					}
+
+					// Set Cooling Temperature
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.UserAirconSettings.TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Cool_oC");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.SetTemperatureCooling = dblTemp;
+						}
+					}
+
+					// Set Heating Temperature
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.UserAirconSettings.TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirCondiGetAirConditionerFullStatustionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Heat_oC");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.SetTemperatureHeating = dblTemp;
+						}
+					}
+
+					// Live Temperature
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.MasterInfo.LiveTemp_oC.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveTemp_oC");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.Temperature = dblTemp;
+						}
+					}
+
+					// Live Temperature Outside
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.MasterInfo.LiveOutdoorTemp_oC.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveOutdoorTemp_oC");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.OutdoorTemperature = dblTemp;
+						}
+					}
+
+					// Live Humidity
+					if (!double.TryParse(jsonResponse.lastKnownState.acsystem.MasterInfo.LiveHumidity_pc.ToString(), out dblTemp))
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveHumidity_pc");
+					else
+					{
+						lock (_oLockData)
+						{
+							_airConditionerData.Humidity = dblTemp;
+						}
+					}
+
+					// Zones
+					aEnabledZones = jsonResponse.lastKnownState.acsystem.UserAirconSettings.EnabledZones;
+					if (aEnabledZones.Count != 8)
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
+					else
+					{
+						for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
+						{
+							// Enabled
+							if (!bool.TryParse(aEnabledZones[iZoneIndex].ToString(), out bTemp))
+								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read zone information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
+							else
+							{
+								lock (_oLockData)
+								{
+									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+										_airConditionerZones[iZoneIndex + 1].State = bTemp;
+								}
+							}
+
+							// Temperature
+							if (!double.TryParse(jsonResponse.lastKnownState.acsystem.RemoteZoneInfo[iZoneIndex].LiveTemp_oC.ToString(), out dblTemp))
+								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex));
+							else
+							{
+								lock (_oLockData)
+								{
+									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+										_airConditionerZones[iZoneIndex + 1].Temperature = dblTemp;
+								}
+							}
+
+							// Cooling Set Temperature
+							if (!double.TryParse(jsonResponse.lastKnownState.acsystem.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
+								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex));
+							else
+							{
+								lock (_oLockData)
+								{
+									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+										_airConditionerZones[iZoneIndex + 1].SetTemperatureCooling = dblTemp;
+								}
+							}
+							// Heating Set Temperature
+							if (!double.TryParse(jsonResponse.lastKnownState.acsystem.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
+								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex));
+							else
+							{
+								lock (_oLockData)
+								{
+									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+										_airConditionerZones[iZoneIndex + 1].SetTemperatureHeating = dblTemp;
+								}
+							}
+
+							// Position
+							if (!double.TryParse(jsonResponse.lastKnownState.acsystem.RemoteZoneInfo[iZoneIndex].ZonePosition.ToString(), out dblTemp))
+								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex));
+							else
+							{
+								lock (_oLockData)
+								{
+									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
+										_airConditionerZones[iZoneIndex + 1].Position = dblTemp;
+								}
+							}
+						}
 					}
 				}
 				else
 				{
 					if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
 					{
-						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+						Logging.WriteDebugLogError("Que.GetAirConditionerFullStatus()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 						_eventAuthenticationFailure.Set();
 					}
 					else
-						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, "Unable to process API response: {0}/{1}. Is the serial number correct?", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+						Logging.WriteDebugLogError("Que.GetAirConditionerFullStatus()", lRequestId, "Unable to process API response: {0}/{1}. Is the serial number correct?", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 					bRetVal = false;
 					goto Cleanup;
@@ -672,7 +846,7 @@ namespace HMX.HASSActronQue
 			}
 			catch (OperationCanceledException eException)
 			{
-				Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+				Logging.WriteDebugLogError("Que.GetAirConditionerFullStatus()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
 
 				bRetVal = false;
 				goto Cleanup;
@@ -680,9 +854,9 @@ namespace HMX.HASSActronQue
 			catch (Exception eException)
 			{
 				if (eException.InnerException != null)
-					Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
+					Logging.WriteDebugLogError("Que.GetAirConditionerFullStatus()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
 				else
-					Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
+					Logging.WriteDebugLogError("Que.GetAirConditionerFullStatus()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
 
 				bRetVal = false;
 				goto Cleanup;
