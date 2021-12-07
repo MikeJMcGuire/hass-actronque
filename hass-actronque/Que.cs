@@ -26,10 +26,13 @@ namespace HMX.HASSActronQue
 		private static string _strQueUser, _strQuePassword, _strSerialNumber;
 		private static string _strNextEventURL = "";
 		private static bool _bPerZoneControls = false;
+		private static bool _bNeoNoEventMode = false;
+		private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClient = null, _httpClientAuth = null, _httpClientCommands = null;
 		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 15; // Seconds
+		private static int _iPollIntervalNeoNoEventsMode = 30; // Seconds
 		private static int _iPollIntervalUpdate = 5; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 10; // Seconds
@@ -593,6 +596,105 @@ namespace HMX.HASSActronQue
 			return bRetVal;
 		}
 
+		private async static Task<bool> GetAirConditionerFullStatus()
+		{
+			HttpResponseMessage httpResponse = null;
+			CancellationTokenSource cancellationToken = null;
+			long lRequestId = RequestManager.GetRequestId();
+			string strPageURL = "api/v0/client/ac-systems/status/latest?serial=";
+			string strResponse;
+			dynamic jsonResponse;
+			bool bRetVal = true;
+			Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
+			AirConditionerZone zone;
+
+			Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
+
+			if (!IsTokenValid())
+			{
+				bRetVal = false;
+				goto Cleanup;
+			}
+
+			try
+			{
+				cancellationToken = new CancellationTokenSource();
+				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
+
+				httpResponse = await _httpClient.GetAsync(strPageURL + _strSerialNumber, cancellationToken.Token);
+
+				if (httpResponse.IsSuccessStatusCode)
+				{
+					strResponse = await httpResponse.Content.ReadAsStringAsync();
+
+					Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
+
+					jsonResponse = JsonConvert.DeserializeObject(strResponse);
+
+					// Zones
+					for (int iZoneIndex = 0; iZoneIndex < jsonResponse.lastKnownState.RemoteZoneInfo.Count; iZoneIndex++)
+					{
+						if (bool.Parse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Exists.ToString()))
+						{
+							zone = new AirConditionerZone();
+
+							zone.Name = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Title;
+							if (zone.Name == "")
+								zone.Name = "Zone " + (iZoneIndex + 1);
+							zone.Temperature = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveTemp_oC;
+
+							Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, zone.Name);
+
+							dZones.Add(iZoneIndex + 1, zone);
+						}
+					}
+
+					// Update Air Conditioner Data
+					lock (_oLockData)
+					{
+						_airConditionerZones = dZones;
+					}
+				}
+				else
+				{
+					if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+					{
+						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+						_eventAuthenticationFailure.Set();
+					}
+					else
+						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, "Unable to process API response: {0}/{1}. Is the serial number correct?", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+
+					bRetVal = false;
+					goto Cleanup;
+				}
+			}
+			catch (OperationCanceledException eException)
+			{
+				Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+
+				bRetVal = false;
+				goto Cleanup;
+			}
+			catch (Exception eException)
+			{
+				if (eException.InnerException != null)
+					Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
+				else
+					Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
+
+				bRetVal = false;
+				goto Cleanup;
+			}
+
+		Cleanup:
+			cancellationToken?.Dispose();
+			httpResponse?.Dispose();
+
+			return bRetVal;
+		}
+
 		private async static Task<bool> GetAirConditionerEvents()
 		{
 			HttpResponseMessage httpResponse = null;
@@ -655,6 +757,9 @@ namespace HMX.HASSActronQue
 
 					for (int iEvent = jsonResponse.events.Count - 1; iEvent >= 0; iEvent--)
 					{
+						// Events Received Flag
+						_bEventsReceived = true;
+
 						strEventType = jsonResponse.events[iEvent].type;
 
 						Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Event Type: {1}", lRequestId.ToString("X8"), strEventType);
@@ -1173,10 +1278,23 @@ namespace HMX.HASSActronQue
 
 						Thread.Sleep(_iPostCommandSleepTimer * 1000);
 
-						if (await GetAirConditionerEvents())
+						// Normal Mode
+						if (!_bNeoNoEventMode)
 						{
-							MQTTUpdateData();
-							MQTT.Update(null);
+							if (await GetAirConditionerEvents())
+							{
+								MQTTUpdateData();
+								MQTT.Update(null);
+							}
+						}
+						// Neo No Events Mode
+						else
+						{
+							if (await GetAirConditionerFullStatus())
+							{
+								MQTTUpdateData();
+								MQTT.Update(null);
+							}
 						}
 
 						break;
@@ -1193,10 +1311,33 @@ namespace HMX.HASSActronQue
 							else
 								MQTTRegister();
 						}
-						if (await GetAirConditionerEvents())
+
+						// Normal Mode
+						if (!_bNeoNoEventMode)
 						{
-							MQTTUpdateData();
-							MQTT.Update(null);
+							if (await GetAirConditionerEvents())
+							{
+								if (_bEventsReceived)
+								{
+									MQTTUpdateData();
+									MQTT.Update(null);
+								}
+								else if (_strSystemType == "neo")
+								{
+									Logging.WriteDebugLog("Que.AirConditionerMonitor() No Neo Events Received - Switching to Full Status Polling");
+									_bNeoNoEventMode = true;
+								}
+							}
+						}
+						
+						// Neo No Events Mode
+						if (_bNeoNoEventMode)
+						{
+							if (await GetAirConditionerFullStatus())
+							{
+								MQTTUpdateData();
+								MQTT.Update(null);
+							}
 						}
 
 						break;
@@ -1219,7 +1360,7 @@ namespace HMX.HASSActronQue
 					iCommandAckRetries = 0;
 				}
 				else
-					iWaitInterval = _iPollInterval;
+					iWaitInterval = (!_bNeoNoEventMode ? _iPollInterval : _iPollIntervalNeoNoEventsMode);
 			}
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor() Complete");
