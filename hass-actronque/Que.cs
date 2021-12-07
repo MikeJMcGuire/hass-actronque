@@ -1918,8 +1918,8 @@ namespace HMX.HASSActronQue
 					bZones = new bool[] { false, false, false, false, false, false, false, false };
 
 					// Temporarily set zone state to support subsequent zone changes before the next poll
-					if (_airConditionerZones.ContainsKey(iZone - 1))
-						_airConditionerZones[iZone - 1].State = bState;
+					if (_airConditionerZones.ContainsKey(iZone))
+						_airConditionerZones[iZone].State = bState;
 
 					for (int iIndex = 0; iIndex < bZones.Length; iIndex++)
 					{
