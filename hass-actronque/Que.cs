@@ -663,13 +663,16 @@ namespace HMX.HASSActronQue
 					}
 
 					// Compressor Power
-					if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.OutdoorUnit.CompPower.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.OutdoorUnit.CompPower");
-					else
+					if (jsonResponse.lastKnownState.LiveAircon.ContainsKey("OutdoorUnit"))
 					{
-						lock (_oLockData)
+						if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.OutdoorUnit.CompPower.ToString(), out dblTemp))
+							Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.OutdoorUnit.CompPower");
+						else
 						{
-							_airConditionerData.CompressorPower = dblTemp;
+							lock (_oLockData)
+							{
+								_airConditionerData.CompressorPower = dblTemp;
+							}
 						}
 					}
 
