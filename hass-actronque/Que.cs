@@ -1607,7 +1607,7 @@ namespace HMX.HASSActronQue
 
 											if (jObject.HasValues)
 											{
-												if (!double.TryParse(jObject.First.Value<string>("Battery_pc").ToString(), out dblTemp))
+												if (!double.TryParse(jObject.First["Battery_pc"].ToString(), out dblTemp))
 													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
 												else
 												{
