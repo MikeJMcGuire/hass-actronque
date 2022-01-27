@@ -1607,9 +1607,15 @@ namespace HMX.HASSActronQue
 
 											if (jObject.HasValues)
 											{
+												if (jObject.First.HasValues)
+												{
+													Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jObject.First.First.ToString()); 
+													
+													
+												}
 												jsonSubset = jObject.First;
 
-												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jsonSubset[0].ToString());
+												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jsonSubset.ToString());
 
 												if (!double.TryParse(jsonSubset.Battery_pc.ToString(), out dblTemp))
 													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
