@@ -610,6 +610,7 @@ namespace HMX.HASSActronQue
 			double dblTemp;
 			bool bTemp;
 			JArray aEnabledZones;
+			JObject jObject;
 
 			Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
 
@@ -881,10 +882,12 @@ namespace HMX.HASSActronQue
 
 							// Battery
 							if (jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
-							{ 
-								if (jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors.Count > 0)
-								{ 
-									if (!double.TryParse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors[0].Battery_pc.ToString(), out dblTemp))
+							{
+								jObject = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors;
+
+								if (jObject.HasValues && jObject.First.HasValues)
+								{
+									if (!double.TryParse(jObject.First.First["Battery_pc"].ToString() ?? "", out dblTemp))
 										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
 									else
 									{
@@ -894,7 +897,6 @@ namespace HMX.HASSActronQue
 												_airConditionerZones[iZoneIndex + 1].Battery = dblTemp;
 										}
 									}
-							
 								}
 							}
 						}
@@ -1572,8 +1574,6 @@ namespace HMX.HASSActronQue
 													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
 												else
 												{
-													Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Battery: {1}", lRequestId.ToString("X8"), dblTemp.ToString());
-
 													lock (_oLockData)
 													{
 														if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
