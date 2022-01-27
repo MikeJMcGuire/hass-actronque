@@ -533,6 +533,8 @@ namespace HMX.HASSActronQue
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
+					Logging.WriteDebugLog("Que.GetAirConditionerZones() {0}", strResponse);
+
 					// Zones
 					for (int iZoneIndex = 0; iZoneIndex < jsonResponse.lastKnownState.RemoteZoneInfo.Count; iZoneIndex++)
 					{
