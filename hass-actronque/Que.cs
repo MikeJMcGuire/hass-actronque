@@ -1609,7 +1609,7 @@ namespace HMX.HASSActronQue
 											{
 												if (jObject.First.HasValues)
 												{
-													Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jObject.First.First.ToString()); 
+													Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jObject.First.First["Battery_pc"].ToString()); 
 													
 													
 												}
