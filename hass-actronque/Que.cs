@@ -1607,7 +1607,7 @@ namespace HMX.HASSActronQue
 
 											if (jObject.HasValues)
 											{
-												jsonSubset = jObject.First;
+												jsonSubset = jObject.First[0];
 
 												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jsonSubset.ToString());
 
