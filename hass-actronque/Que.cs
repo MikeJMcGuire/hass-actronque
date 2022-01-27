@@ -1552,7 +1552,7 @@ namespace HMX.HASSActronQue
 
 										// Humidity
 										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex));
+											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex));
 										else
 										{
 											lock (_oLockData)
@@ -1563,12 +1563,16 @@ namespace HMX.HASSActronQue
 										}
 
 										// Battery
+										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors").ToString());
+										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors Count: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.Count.ToString());
+										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors[0].Battery: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors[0].Battery_pc.ToString());
+
 										if (jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
 										{
 											if (jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.Count > 0)
 											{
 												if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors[0].Battery_pc.ToString(), out dblTemp))
-													Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
+													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
 												else
 												{
 													lock (_oLockData)
