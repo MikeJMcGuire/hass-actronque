@@ -1566,6 +1566,8 @@ namespace HMX.HASSActronQue
 
 										// Battery
 										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors").ToString());
+										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.ToString());
+										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.GetType());
 										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.HasValues.ToString());
 										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.First.ToString());
 										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.First.HasValues.ToString());
