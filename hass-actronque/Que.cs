@@ -1565,7 +1565,7 @@ namespace HMX.HASSActronQue
 										// Battery
 										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors").ToString());
 										
-										foreach (dynamic temp in jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.Properties)
+										foreach (dynamic temp in jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.Properties())
 										{
 											Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Temp: {1}", lRequestId.ToString("X8"), temp.ToString());
 
