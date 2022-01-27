@@ -1285,7 +1285,7 @@ namespace HMX.HASSActronQue
 											}
 										}
 										// Battery
-										else if (change.Name.EndsWith(".Battery_pc") && change.Name.Contains("RemoteZoneInfo"))
+										else if (change.Name.EndsWith(".Battery_pc"))
 										{											
 											if (!double.TryParse(change.Value.ToString(), out dblTemp))
 												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iIndex));
@@ -1320,6 +1320,8 @@ namespace HMX.HASSActronQue
 								break;
 
 							case "full-status-broadcast":
+								Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Full Response: {1}", lRequestId.ToString("X8"), strResponse);
+
 								// Compressor Mode
 								strInput = jsonResponse.events[iEvent].data.LiveAircon.CompressorMode;
 								if (strInput == "")
