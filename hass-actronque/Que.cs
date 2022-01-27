@@ -949,7 +949,7 @@ namespace HMX.HASSActronQue
 			long lRequestId = RequestManager.GetRequestId();
 			string strPageURL, strPageURLFirstEvent = "api/v0/client/ac-systems/events/latest?serial=";
 			string strResponse;
-			dynamic jsonResponse, jsonSubset;
+			dynamic jsonResponse;
 			bool bRetVal = true;
 			bool bTemp;
 			double dblTemp;
@@ -1566,58 +1566,13 @@ namespace HMX.HASSActronQue
 										}
 
 										// Battery
-										/*Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors").ToString());
-										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.ToString());
-										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.GetType());
-
-										JObject x = jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors;
-										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), x.HasValues.ToString());
-										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), x.First.ToString());
-										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors: {1}", lRequestId.ToString("X8"), x.First.HasValues.ToString());*/
-
-
-										//jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.First
-
-										/*foreach (dynamic temp in jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.Properties())
-										{
-											if (temp.ContainsKey("Battery_pc"))
-											{
-												if (!double.TryParse(temp.Battery_pc.ToString(), out dblTemp))
-													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
-												else
-												{
-													lock (_oLockData)
-													{
-														if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-															_airConditionerZones[iZoneIndex + 1].Battery = dblTemp;
-													}
-												}
-											}
-
-											Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Temp: {1}", lRequestId.ToString("X8"), temp.ToString());
-										
-										}*/
-
-										//Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors Count: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors.Properties().Count);
-										//Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Sensors[0].Battery: {1}", lRequestId.ToString("X8"), jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors[0].Battery_pc.ToString());
-
 										if (jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
 										{
 											jObject = jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors;
 
-											if (jObject.HasValues)
+											if (jObject.HasValues && jObject.First.HasValues)
 											{
-												if (jObject.First.HasValues)
-												{
-													Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jObject.First.First["Battery_pc"].ToString()); 
-													
-													
-												}
-												jsonSubset = jObject.First;
-
-												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] JSON: {1}", lRequestId.ToString("X8"), jsonSubset.ToString());
-
-												if (!double.TryParse(jsonSubset.Battery_pc.ToString(), out dblTemp))
+												if (!double.TryParse(jObject.First.First["Battery_pc"].ToString() ?? "", out dblTemp))
 													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
 												else
 												{
@@ -1629,8 +1584,7 @@ namespace HMX.HASSActronQue
 															_airConditionerZones[iZoneIndex + 1].Battery = dblTemp;
 													}
 												}
-
-											}
+											}											
 										}
 									}
 								}
