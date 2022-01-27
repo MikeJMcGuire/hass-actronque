@@ -949,7 +949,7 @@ namespace HMX.HASSActronQue
 			long lRequestId = RequestManager.GetRequestId();
 			string strPageURL, strPageURLFirstEvent = "api/v0/client/ac-systems/events/latest?serial=";
 			string strResponse;
-			dynamic jsonResponse;
+			dynamic jsonResponse, jsonSubset;
 			bool bRetVal = true;
 			bool bTemp;
 			double dblTemp;
@@ -1607,7 +1607,9 @@ namespace HMX.HASSActronQue
 
 											if (jObject.HasValues)
 											{
-												if (!double.TryParse(jObject.First["Battery_pc"].ToString(), out dblTemp))
+												jsonSubset = jObject.First;
+
+												if (!double.TryParse(jsonSubset.Battery_pc.ToString(), out dblTemp))
 													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
 												else
 												{
