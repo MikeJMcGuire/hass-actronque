@@ -533,8 +533,6 @@ namespace HMX.HASSActronQue
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
-					Logging.WriteDebugLog("Que.GetAirConditionerZones() {0}", strResponse);
-
 					// Zones
 					for (int iZoneIndex = 0; iZoneIndex < jsonResponse.lastKnownState.RemoteZoneInfo.Count; iZoneIndex++)
 					{
@@ -1323,8 +1321,6 @@ namespace HMX.HASSActronQue
 								break;
 
 							case "full-status-broadcast":
-								Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Full Response: {1}", lRequestId.ToString("X8"), strResponse);
-
 								// Compressor Mode
 								strInput = jsonResponse.events[iEvent].data.LiveAircon.CompressorMode;
 								if (strInput == "")
