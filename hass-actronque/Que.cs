@@ -1001,7 +1001,7 @@ namespace HMX.HASSActronQue
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
 										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
-										updateItems |= (UpdateItems) (2 ^ (iIndex + 1));
+										updateItems |= (UpdateItems) Math.Pow(2, iIndex + 1);
 										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 
 										// Live Temperature
@@ -1031,7 +1031,7 @@ namespace HMX.HASSActronQue
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
 										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 										updateItems |= UpdateItems.Main;
-										updateItems |= (UpdateItems)(2 ^ (iIndex + 1));
+										updateItems |= (UpdateItems) Math.Pow(2, iIndex + 1);
 										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 
 									}
@@ -1522,7 +1522,7 @@ namespace HMX.HASSActronQue
 			// Zones
 			foreach (int iIndex in _airConditionerZones.Keys)
 			{
-				if (items.HasFlag((UpdateItems)(2 ^ iIndex)))
+				if (items.HasFlag((UpdateItems)Math.Pow(2, iIndex)))
 				{
 					MQTT.SendMessage(string.Format("actronque/zone{0}", iIndex), _airConditionerZones[iIndex].State ? "ON" : "OFF");
 					MQTT.SendMessage(string.Format("actronque/zone{0}/temperature", iIndex), _airConditionerZones[iIndex].Temperature.ToString());
