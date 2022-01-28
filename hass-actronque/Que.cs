@@ -534,28 +534,33 @@ namespace HMX.HASSActronQue
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
 					// Zones
-					for (int iZoneIndex = 0; iZoneIndex < jsonResponse.lastKnownState.RemoteZoneInfo.Count; iZoneIndex++)
+					if (jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("RemoteZoneInfo"))
 					{
-						if (bool.Parse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Exists.ToString()))
+						for (int iZoneIndex = 0; iZoneIndex < jsonResponse.lastKnownState.RemoteZoneInfo.Count; iZoneIndex++)
 						{
-							zone = new AirConditionerZone();
+							if (bool.Parse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Exists.ToString()))
+							{
+								zone = new AirConditionerZone();
 
-							zone.Name = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Title;
-							if (zone.Name == "")
-								zone.Name = "Zone " + (iZoneIndex + 1);
-							zone.Temperature = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveTemp_oC;
+								zone.Name = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Title;
+								if (zone.Name == "")
+									zone.Name = "Zone " + (iZoneIndex + 1);
+								zone.Temperature = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveTemp_oC;
 
-							Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, zone.Name);
+								Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, zone.Name);
 
-							dZones.Add(iZoneIndex + 1, zone);
+								dZones.Add(iZoneIndex + 1, zone);
+							}
+						}
+
+						// Update Air Conditioner Data
+						lock (_oLockData)
+						{
+							_airConditionerZones = dZones;
 						}
 					}
-
-					// Update Air Conditioner Data
-					lock (_oLockData)
-					{
-						_airConditionerZones = dZones;
-					}
+					else
+						Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded - No Data. Retrying.", lRequestId.ToString("X8"));
 				}
 				else
 				{
@@ -606,11 +611,6 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			string strInput;
-			double dblTemp;
-			bool bTemp;
-			JArray aEnabledZones;
-			JObject jObject;
 
 			Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
 
@@ -640,267 +640,7 @@ namespace HMX.HASSActronQue
 
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
-					// Compressor Mode
-					strInput = jsonResponse.lastKnownState.LiveAircon.CompressorMode;
-					if (strInput == "")
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorMode");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.CompressorState = strInput;
-						}
-					}
-
-					// Compressor Capacity
-					if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.CompressorCapacity.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorCapacity");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.CompressorCapacity = dblTemp;
-						}
-					}
-
-					// Compressor Power
-					if (jsonResponse.lastKnownState.LiveAircon.ContainsKey("OutdoorUnit"))
-					{
-						if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.OutdoorUnit.CompPower.ToString(), out dblTemp))
-							Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.OutdoorUnit.CompPower");
-						else
-						{
-							lock (_oLockData)
-							{
-								_airConditionerData.CompressorPower = dblTemp;
-							}
-						}
-					}
-
-					// On
-					if (!bool.TryParse(jsonResponse.lastKnownState.UserAirconSettings.isOn.ToString(), out bTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.isOn");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.On = bTemp;
-						}
-					}
-
-					// Mode
-					strInput = jsonResponse.lastKnownState.UserAirconSettings.Mode;
-					if (strInput == "")
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.Mode = strInput;
-						}
-					}
-
-					// Fan Mode
-					strInput = jsonResponse.lastKnownState.UserAirconSettings.FanMode;
-					if (strInput == "")
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.FanMode");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.FanMode = strInput;
-							_airConditionerData.Continuous = strInput.EndsWith("CONT");
-						}
-					}
-
-					// Set Cooling Temperature
-					if (!double.TryParse(jsonResponse.lastKnownState.UserAirconSettings.TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Cool_oC");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.SetTemperatureCooling = dblTemp;
-						}
-					}
-
-					// Set Heating Temperature
-					if (!double.TryParse(jsonResponse.lastKnownState.UserAirconSettings.TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirCondiGetAirConditionerFullStatustionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Heat_oC");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.SetTemperatureHeating = dblTemp;
-						}
-					}
-
-					// Live Temperature
-					if (!double.TryParse(jsonResponse.lastKnownState.MasterInfo.LiveTemp_oC.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveTemp_oC");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.Temperature = dblTemp;
-						}
-					}
-
-					// Live Temperature Outside
-					if (!double.TryParse(jsonResponse.lastKnownState.MasterInfo.LiveOutdoorTemp_oC.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveOutdoorTemp_oC");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.OutdoorTemperature = dblTemp;
-						}
-					}
-
-					// Live Humidity
-					if (!double.TryParse(jsonResponse.lastKnownState.MasterInfo.LiveHumidity_pc.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveHumidity_pc");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.Humidity = dblTemp;
-						}
-					}
-
-					// Coil Inlet Temperature
-					if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.CoilInlet.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CoilInlet");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.CoilInletTemperature = dblTemp;
-						}
-					}
-
-					// Fan PWM
-					if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.FanPWM.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.FanPWM");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.FanPWM = dblTemp;
-						}
-					}
-
-					// Fan RPM
-					if (!double.TryParse(jsonResponse.lastKnownState.LiveAircon.FanRPM.ToString(), out dblTemp))
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.FanRPM");
-					else
-					{
-						lock (_oLockData)
-						{
-							_airConditionerData.FanRPM = dblTemp;
-						}
-					}
-
-					// Zones
-					aEnabledZones = jsonResponse.lastKnownState.UserAirconSettings.EnabledZones;
-					if (aEnabledZones.Count != 8)
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
-					else
-					{
-						for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
-						{
-							// Enabled
-							if (!bool.TryParse(aEnabledZones[iZoneIndex].ToString(), out bTemp))
-								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read zone information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
-							else
-							{
-								lock (_oLockData)
-								{
-									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-										_airConditionerZones[iZoneIndex + 1].State = bTemp;
-								}
-							}
-
-							// Temperature
-							if (!double.TryParse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveTemp_oC.ToString(), out dblTemp))
-								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex));
-							else
-							{
-								lock (_oLockData)
-								{
-									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-										_airConditionerZones[iZoneIndex + 1].Temperature = dblTemp;
-								}
-							}
-
-							// Cooling Set Temperature
-							if (!double.TryParse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
-								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex));
-							else
-							{
-								lock (_oLockData)
-								{
-									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-										_airConditionerZones[iZoneIndex + 1].SetTemperatureCooling = dblTemp;
-								}
-							}
-							// Heating Set Temperature
-							if (!double.TryParse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
-								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex));
-							else
-							{
-								lock (_oLockData)
-								{
-									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-										_airConditionerZones[iZoneIndex + 1].SetTemperatureHeating = dblTemp;
-								}
-							}
-
-							// Position
-							if (!double.TryParse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].ZonePosition.ToString(), out dblTemp))
-								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex));
-							else
-							{
-								lock (_oLockData)
-								{
-									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-										_airConditionerZones[iZoneIndex + 1].Position = dblTemp;
-								}
-							}
-
-							// Humidity
-							if (!double.TryParse(jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc.ToString(), out dblTemp))
-								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex));
-							else
-							{
-								lock (_oLockData)
-								{
-									if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-										_airConditionerZones[iZoneIndex + 1].Humidity = dblTemp;
-								}
-							}
-
-							// Battery
-							if (jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
-							{
-								jObject = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors;
-
-								if (jObject.HasValues && jObject.First.HasValues)
-								{
-									if (!double.TryParse(jObject.First.First["Battery_pc"].ToString() ?? "", out dblTemp))
-										Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
-									else
-									{
-										lock (_oLockData)
-										{
-											if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-												_airConditionerZones[iZoneIndex + 1].Battery = dblTemp;
-										}
-									}
-								}
-							}
-						}
-					}
+					ProcessFullStatus(lRequestId, jsonResponse.lastKnownState);
 				}
 				else
 				{
@@ -942,6 +682,143 @@ namespace HMX.HASSActronQue
 			return bRetVal;
 		}
 
+		private static void ProcessFullStatus(long lRequestId, dynamic jsonResponse)
+		{
+			JArray aEnabledZones;
+			JObject jObject;
+
+			Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}]", lRequestId.ToString("X8"));
+
+			// Compressor Mode
+			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorMode", jsonResponse.LiveAircon.CompressorMode.ToString(), ref _airConditionerData.CompressorState);
+
+			// Compressor Capacity
+			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorCapacity", jsonResponse.LiveAircon.CompressorCapacity.ToString(), ref _airConditionerData.CompressorCapacity);
+
+			// Compressor Power
+			if (jsonResponse.LiveAircon.ContainsKey("OutdoorUnit"))
+				ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompPower", jsonResponse.LiveAircon.OutdoorUnit.CompPower.ToString(), ref _airConditionerData.CompressorPower);
+
+			// On
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.isOn", jsonResponse.UserAirconSettings.isOn.ToString(), ref _airConditionerData.On);
+
+			// Mode
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.Mode", jsonResponse.UserAirconSettings.Mode.ToString(), ref _airConditionerData.Mode);
+
+			// Fan Mode
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.FanMode", jsonResponse.UserAirconSettings.FanMode.ToString(), ref _airConditionerData.FanMode);
+
+			// Set Cooling Temperature
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Cool_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Cool_oC.ToString(), ref _airConditionerData.SetTemperatureCooling);
+
+			// Set Heating Temperature
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Heat_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Heat_oC.ToString(), ref _airConditionerData.SetTemperatureHeating);
+
+			// Live Temperature
+			ProcessPartialStatus(lRequestId, "MasterInfo.LiveTemp_oC", jsonResponse.MasterInfo.LiveTemp_oC.ToString(), ref _airConditionerData.Temperature);
+
+			// Live Temperature Outside
+			ProcessPartialStatus(lRequestId, "MasterInfo.LiveOutdoorTemp_oC", jsonResponse.MasterInfo.LiveOutdoorTemp_oC.ToString(), ref _airConditionerData.OutdoorTemperature);
+
+			// Live Humidity
+			ProcessPartialStatus(lRequestId, "MasterInfo.LiveHumidity_pc", jsonResponse.MasterInfo.LiveHumidity_pc.ToString(), ref _airConditionerData.Humidity);
+
+			// Coil Inlet Temperature
+			ProcessPartialStatus(lRequestId, "LiveAircon.CoilInlet", jsonResponse.LiveAircon.CoilInlet.ToString(), ref _airConditionerData.CoilInletTemperature);
+
+			// Fan PWM
+			ProcessPartialStatus(lRequestId, "LiveAircon.FanPWM", jsonResponse.LiveAircon.FanPWM.ToString(), ref _airConditionerData.FanPWM);
+
+			// Fan RPM
+			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM.ToString(), ref _airConditionerData.FanRPM); 
+
+			// Zones
+			aEnabledZones = jsonResponse.UserAirconSettings.EnabledZones;
+			if (aEnabledZones.Count != 8)
+				Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
+			else
+			{
+				for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
+				{
+					// Enabled
+					ProcessPartialStatus(lRequestId, "UserAirconSettings.EnabledZones", aEnabledZones[iZoneIndex].ToString(), ref _airConditionerZones[iZoneIndex + 1].State);
+
+					// Temperature
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveTemp_oC.ToString(), ref _airConditionerZones[iZoneIndex + 1].Temperature);
+
+					// Cooling Set Temperature
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC.ToString(), ref _airConditionerZones[iZoneIndex + 1].SetTemperatureCooling);
+
+					// Heating Set Temperature
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC.ToString(), ref _airConditionerZones[iZoneIndex + 1].SetTemperatureHeating);
+
+					// Position
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].ZonePosition.ToString(), ref _airConditionerZones[iZoneIndex + 1].Position);
+
+					// Humidity
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc.ToString(), ref _airConditionerZones[iZoneIndex + 1].Humidity);
+
+					// Battery
+					if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
+					{
+						jObject = jsonResponse.RemoteZoneInfo[iZoneIndex].Sensors;
+
+						if (jObject.HasValues && jObject.First.HasValues)
+							ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex), jObject.First.First["Battery_pc"].ToString() ?? "", ref _airConditionerZones[iZoneIndex + 1].Battery);
+					}
+				}
+			}
+		}
+
+		private static void ProcessPartialStatus(long lRequestId, string strName, string strValue, ref double dblTarget)
+		{
+			double dblTemp = 0.0;
+
+			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
+
+			if (!double.TryParse(strValue, out dblTemp))
+				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
+			else
+			{
+				lock (_oLockData)
+				{
+					dblTarget = dblTemp;
+				}
+			}
+		}
+
+		private static void ProcessPartialStatus(long lRequestId, string strName, string strValue, ref string strTarget)
+		{
+			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
+
+			if (strValue == "")
+				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
+			else
+			{
+				lock (_oLockData)
+				{
+					strTarget = strValue;
+				}
+			}
+		}
+
+		private static void ProcessPartialStatus(long lRequestId, string strName, string strValue, ref bool bTarget)
+		{
+			bool bTemp;
+
+			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
+
+			if (!bool.TryParse(strValue, out bTemp))
+				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
+			else
+			{
+				lock (_oLockData)
+				{
+					bTarget = bTemp;
+				}
+			}
+		}
+
 		private async static Task<bool> GetAirConditionerEvents()
 		{
 			HttpResponseMessage httpResponse = null;
@@ -951,11 +828,7 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			bool bTemp;
-			double dblTemp;
-			string strEventType, strInput;
-			JArray aEnabledZones;
-			JObject jObject;
+			string strEventType;
 			int iIndex;
 
 			if (_strNextEventURL == "")
@@ -1028,190 +901,46 @@ namespace HMX.HASSActronQue
 
 									// Compressor Mode
 									if (change.Name == "LiveAircon.CompressorMode")
-									{
-										strInput = change.Value.ToString();
-										if (strInput == "")
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorMode");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.CompressorState = strInput;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.CompressorState);
 									// Compressor Capacity
 									else if (change.Name == "LiveAircon.CompressorCapacity")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorCapacity");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.CompressorCapacity = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.CompressorCapacity);
 									// Compressor Power
 									else if (change.Name == "LiveAircon.OutdoorUnit.CompPower")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.OutdoorUnit.CompPower");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.CompressorPower = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.CompressorPower);
 									// Mode
 									else if (change.Name == "UserAirconSettings.Mode")
-									{
-										strInput = change.Value.ToString();
-										if (strInput == "")
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.Mode = strInput;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.Mode);
 									// Fan Mode
 									else if (change.Name == "UserAirconSettings.FanMode")
-									{
-										strInput = change.Value.ToString();
-										if (strInput == "")
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.FanMode");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.FanMode = strInput;
-												_airConditionerData.Continuous = strInput.EndsWith("CONT");
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.FanMode);
 									// On
 									else if (change.Name == "UserAirconSettings.isOn")
-									{
-										if (!bool.TryParse(change.Value.ToString(), out bTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.isOn");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.On = bTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.On);
 									// Live Temperature
 									else if (change.Name == "MasterInfo.LiveTemp_oC")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveTemp_oC");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.Temperature = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.Temperature);
 									// Live Temperature Outside
 									else if (change.Name == "MasterInfo.LiveOutdoorTemp_oC")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveOutdoorTemp_oC");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.OutdoorTemperature = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.OutdoorTemperature);
 									// Live Humidity
 									else if (change.Name == "MasterInfo.LiveHumidity_pc")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveHumidity_pc");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.Humidity = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.Humidity);
 									// Set Temperature Cooling
 									else if (change.Name == "UserAirconSettings.TemperatureSetpoint_Cool_oC")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Cool_oC");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.SetTemperatureCooling = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.SetTemperatureCooling);
 									// Set Temperature Heating
 									else if (change.Name == "UserAirconSettings.TemperatureSetpoint_Heat_oC")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Heat_oC");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.SetTemperatureHeating = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.SetTemperatureHeating);
 									// Coil Inlet Temperature
 									else if (change.Name == "LiveAircon.CoilInlet")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CoilInlet");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.CoilInletTemperature = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.CoilInletTemperature);
 									// Fan PWM
 									else if (change.Name == "LiveAircon.FanPWM")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.FanPWM");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.FanPWM = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.FanPWM);									
 									// Fan RPM
 									else if (change.Name == "LiveAircon.FanRPM")
-									{
-										if (!double.TryParse(change.Value.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.FanRPM");
-										else
-										{
-											lock (_oLockData)
-											{
-												_airConditionerData.FanRPM = dblTemp;
-											}
-										}
-									}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerData.FanRPM);									
 									// Remote Zone
 									else if (change.Name.StartsWith("RemoteZoneInfo["))
 									{
@@ -1219,371 +948,36 @@ namespace HMX.HASSActronQue
 
 										// Live Temperature
 										if (change.Name.EndsWith("].LiveTemp_oC"))
-										{
-											if (!double.TryParse(change.Value.ToString(), out dblTemp))
-												Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iIndex));
-											else
-											{
-												lock (_oLockData)
-												{
-													if (_airConditionerZones.ContainsKey(iIndex + 1))
-														_airConditionerZones[iIndex + 1].Temperature = dblTemp;
-												}
-											}
-										}
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Temperature);
 										// Cooling Set Temperature
 										else if (change.Name.EndsWith("].TemperatureSetpoint_Cool_oC"))
-										{
-											if (!double.TryParse(change.Value.ToString(), out dblTemp))
-												Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iIndex));
-											else
-											{
-												lock (_oLockData)
-												{
-													if (_airConditionerZones.ContainsKey(iIndex + 1))
-														_airConditionerZones[iIndex + 1].SetTemperatureCooling = dblTemp;
-												}
-											}
-										}
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].SetTemperatureCooling);
 										// Heating Set Temperature
 										else if (change.Name.EndsWith("].TemperatureSetpoint_Heat_oC"))
-										{
-											if (!double.TryParse(change.Value.ToString(), out dblTemp))
-												Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iIndex));
-											else
-											{
-												lock (_oLockData)
-												{
-													if (_airConditionerZones.ContainsKey(iIndex + 1))
-														_airConditionerZones[iIndex + 1].SetTemperatureHeating = dblTemp;
-												}
-											}
-										}
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].SetTemperatureHeating);
 										// Zone Position
 										else if (change.Name.EndsWith("].ZonePosition"))
-										{
-											if (!double.TryParse(change.Value.ToString(), out dblTemp))
-												Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].ZonePosition", iIndex));
-											else
-											{
-												lock (_oLockData)
-												{
-													if (_airConditionerZones.ContainsKey(iIndex + 1))
-														_airConditionerZones[iIndex + 1].Position = dblTemp;
-												}
-											}
-										}
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Position);
 										// Humidity
 										else if (change.Name.EndsWith("].LiveHumidity_pc"))
-										{
-											if (!double.TryParse(change.Value.ToString(), out dblTemp))
-												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iIndex));
-											else
-											{
-												lock (_oLockData)
-												{
-													if (_airConditionerZones.ContainsKey(iIndex + 1))
-														_airConditionerZones[iIndex + 1].Humidity = dblTemp;
-												}
-											}
-										}
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Humidity);
 										// Battery
 										else if (change.Name.EndsWith(".Battery_pc"))
-										{											
-											if (!double.TryParse(change.Value.ToString(), out dblTemp))
-												Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iIndex));
-											else
-											{
-												lock (_oLockData)
-												{
-													if (_airConditionerZones.ContainsKey(iIndex + 1))
-														_airConditionerZones[iIndex + 1].Battery = dblTemp;
-												}
-											}											
-										}
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Battery);
 									}
 									// Enabled Zone
 									else if (change.Name.StartsWith("UserAirconSettings.EnabledZones["))
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
-										if (!bool.TryParse(change.Value.ToString(), out bTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iIndex + 1))
-													_airConditionerZones[iIndex + 1].State = bTemp;
-											}
-										}
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
 									}
 								}
 
 								break;
 
 							case "full-status-broadcast":
-								// Compressor Mode
-								strInput = jsonResponse.events[iEvent].data.LiveAircon.CompressorMode;
-								if (strInput == "")
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorMode");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.CompressorState = strInput;
-									}
-								}
-
-								// Compressor Capacity
-								if (!double.TryParse(jsonResponse.events[iEvent].data.LiveAircon.CompressorCapacity.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CompressorCapacity");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.CompressorCapacity = dblTemp;
-									}
-								}
-
-								// Compressor Power
-								if (jsonResponse.events[iEvent].data.LiveAircon.ContainsKey("OutdoorUnit"))
-								{
-									if (!double.TryParse(jsonResponse.events[iEvent].data.LiveAircon.OutdoorUnit.CompPower.ToString(), out dblTemp))
-										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.OutdoorUnit.CompPower");
-									else
-									{
-										lock (_oLockData)
-										{
-											_airConditionerData.CompressorPower = dblTemp;
-										}
-									}
-								}
-
-								// On
-								if (!bool.TryParse(jsonResponse.events[iEvent].data.UserAirconSettings.isOn.ToString(), out bTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.isOn");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.On = bTemp;
-									}
-								}
-
-								// Mode
-								strInput = jsonResponse.events[iEvent].data.UserAirconSettings.Mode;
-								if (strInput == "")
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.Mode");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.Mode = strInput;
-									}
-								}
-
-								// Fan Mode
-								strInput = jsonResponse.events[iEvent].data.UserAirconSettings.FanMode;
-								if (strInput == "")
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.FanMode");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.FanMode = strInput;
-										_airConditionerData.Continuous = strInput.EndsWith("CONT");
-									}
-								}
-
-								// Set Cooling Temperature
-								if (!double.TryParse(jsonResponse.events[iEvent].data.UserAirconSettings.TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Cool_oC");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.SetTemperatureCooling = dblTemp;
-									}
-								}
-
-								// Set Heating Temperature
-								if (!double.TryParse(jsonResponse.events[iEvent].data.UserAirconSettings.TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.TemperatureSetpoint_Heat_oC");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.SetTemperatureHeating = dblTemp;
-									}
-								}
-
-								// Live Temperature
-								if (!double.TryParse(jsonResponse.events[iEvent].data.MasterInfo.LiveTemp_oC.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveTemp_oC");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.Temperature = dblTemp;
-									}
-								}
-
-								// Live Temperature Outside
-								if (!double.TryParse(jsonResponse.events[iEvent].data.MasterInfo.LiveOutdoorTemp_oC.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveOutdoorTemp_oC");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.OutdoorTemperature = dblTemp;
-									}
-								}
-
-								// Live Humidity
-								if (!double.TryParse(jsonResponse.events[iEvent].data.MasterInfo.LiveHumidity_pc.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "MasterInfo.LiveHumidity_pc");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.Humidity = dblTemp;
-									}
-								}
-
-								// Coil Inlet Temperature
-								if (!double.TryParse(jsonResponse.events[iEvent].data.LiveAircon.CoilInlet.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.CoilInlet");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.CoilInletTemperature = dblTemp;
-									}
-								}
-
-								// Fan PWM
-								if (!double.TryParse(jsonResponse.events[iEvent].data.LiveAircon.FanPWM.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.FanPWM");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.FanPWM = dblTemp;
-									}
-								}
-
-								// Fan RPM
-								if (!double.TryParse(jsonResponse.events[iEvent].data.LiveAircon.FanRPM.ToString(), out dblTemp))
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "LiveAircon.FanRPM");
-								else
-								{
-									lock (_oLockData)
-									{
-										_airConditionerData.FanRPM = dblTemp;
-									}
-								}
-
-								// Zones
-								aEnabledZones = jsonResponse.events[iEvent].data.UserAirconSettings.EnabledZones;
-								if (aEnabledZones.Count != 8)
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
-								else
-								{
-									for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
-									{
-										// Enabled
-										if (!bool.TryParse(aEnabledZones[iZoneIndex].ToString(), out bTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read zone information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-													_airConditionerZones[iZoneIndex + 1].State = bTemp;
-											}
-										}
-
-										// Temperature
-										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].LiveTemp_oC.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex));
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-													_airConditionerZones[iZoneIndex + 1].Temperature = dblTemp;
-											}
-										}
-
-										// Cooling Set Temperature
-										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex));
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-													_airConditionerZones[iZoneIndex + 1].SetTemperatureCooling = dblTemp;
-											}
-										}
-										// Heating Set Temperature
-										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex));
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-													_airConditionerZones[iZoneIndex + 1].SetTemperatureHeating = dblTemp;
-											}
-										}
-
-										// Position
-										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ZonePosition.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex));
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-													_airConditionerZones[iZoneIndex + 1].Position = dblTemp;
-											}
-										}
-
-										// Humidity
-										if (!double.TryParse(jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc.ToString(), out dblTemp))
-											Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex));
-										else
-										{
-											lock (_oLockData)
-											{
-												if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-													_airConditionerZones[iZoneIndex + 1].Humidity = dblTemp;
-											}
-										}
-
-										// Battery
-										if (jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
-										{
-											jObject = jsonResponse.events[iEvent].data.RemoteZoneInfo[iZoneIndex].Sensors;
-
-											if (jObject.HasValues && jObject.First.HasValues)
-											{
-												if (!double.TryParse(jObject.First.First["Battery_pc"].ToString() ?? "", out dblTemp))
-													Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex));
-												else
-												{
-													lock (_oLockData)
-													{
-														if (_airConditionerZones.ContainsKey(iZoneIndex + 1))
-															_airConditionerZones[iZoneIndex + 1].Battery = dblTemp;
-													}
-												}
-											}											
-										}
-									}
-								}
+								ProcessFullStatus(lRequestId, jsonResponse.events[iEvent].data);
 
 								break;
 						}
@@ -2230,22 +1624,22 @@ namespace HMX.HASSActronQue
 			switch (fanMode)
 			{
 				case FanMode.Automatic:
-					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.Continuous ? "AUTO+CONT" : "AUTO");
+					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.FanMode.EndsWith("CONT") ? "AUTO+CONT" : "AUTO");
 
 					break;
 
 				case FanMode.Low:
-					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.Continuous ? "LOW+CONT" : "LOW");
+					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.FanMode.EndsWith("CONT") ? "LOW+CONT" : "LOW");
 
 					break;
 
 				case FanMode.Medium:
-					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.Continuous ? "MED+CONT" : "MED");
+					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.FanMode.EndsWith("CONT") ? "MED+CONT" : "MED");
 
 					break;
 
 				case FanMode.High:
-					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.Continuous ? "HIGH+CONT" : "HIGH");
+					command.Data.command.Add("UserAirconSettings.FanMode", _airConditionerData.FanMode.EndsWith("CONT") ? "HIGH+CONT" : "HIGH");
 
 					break;
 			}

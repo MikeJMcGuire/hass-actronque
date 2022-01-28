@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2022.1.3] - 2022-01-28
+
+### Changed
+
+- Code efficiency updates.
+
 ## [v2022.1.2] - 2022-01-27
 
 ### Added
