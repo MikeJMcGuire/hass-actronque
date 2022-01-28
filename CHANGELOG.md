@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Code efficiency updates.
+- Reduction in MQTT updates - updating changed items rather than all items.
 
 ## [v2022.1.2] - 2022-01-27
 
