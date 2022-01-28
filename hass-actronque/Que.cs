@@ -31,7 +31,6 @@ namespace HMX.HASSActronQue
 		private static string _strBaseURLQue = "https://que.actronair.com.au/";
 		private static string _strBaseURLNeo = "https://nimbus.actronair.com.au/";
 		private static string _strSystemType;
-		//private static string _strBaseUserAgent = "nxgen-ios/1.1.2 (iPhone; iOS 12.1.4; Scale/3.00)";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
 		private static string _strDeviceIdFile = "/data/deviceid.json";
@@ -1000,10 +999,8 @@ namespace HMX.HASSActronQue
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
-										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 										updateItems |= (UpdateItems) Math.Pow(2, iIndex + 1);
-										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
-
+										
 										// Live Temperature
 										if (change.Name.EndsWith("].LiveTemp_oC"))
 											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Temperature);
@@ -1029,11 +1026,8 @@ namespace HMX.HASSActronQue
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
-										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 										updateItems |= UpdateItems.Main;
 										updateItems |= (UpdateItems) Math.Pow(2, iIndex + 1);
-										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
-
 									}
 								}
 
