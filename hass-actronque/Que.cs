@@ -701,47 +701,47 @@ namespace HMX.HASSActronQue
 			Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}]", lRequestId.ToString("X8"));
 
 			// Compressor Mode
-			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorMode", jsonResponse.LiveAircon.CompressorMode.ToString(), ref _airConditionerData.CompressorState);
+			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorMode", jsonResponse.LiveAircon.CompressorMode?.ToString(), ref _airConditionerData.CompressorState);
 
 			// Compressor Capacity
-			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorCapacity", jsonResponse.LiveAircon.CompressorCapacity.ToString(), ref _airConditionerData.CompressorCapacity);
+			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorCapacity", jsonResponse.LiveAircon.CompressorCapacity?.ToString(), ref _airConditionerData.CompressorCapacity);
 
 			// Compressor Power
 			if (jsonResponse.LiveAircon.ContainsKey("OutdoorUnit"))
-				ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompPower", jsonResponse.LiveAircon.OutdoorUnit.CompPower.ToString(), ref _airConditionerData.CompressorPower);
+				ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompPower", jsonResponse.LiveAircon.OutdoorUnit.CompPower?.ToString(), ref _airConditionerData.CompressorPower);
 
 			// On
-			ProcessPartialStatus(lRequestId, "UserAirconSettings.isOn", jsonResponse.UserAirconSettings.isOn.ToString(), ref _airConditionerData.On);
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.isOn", jsonResponse.UserAirconSettings.isOn?.ToString(), ref _airConditionerData.On);
 
 			// Mode
-			ProcessPartialStatus(lRequestId, "UserAirconSettings.Mode", jsonResponse.UserAirconSettings.Mode.ToString(), ref _airConditionerData.Mode);
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.Mode", jsonResponse.UserAirconSettings.Mode?.ToString(), ref _airConditionerData.Mode);
 
 			// Fan Mode
-			ProcessPartialStatus(lRequestId, "UserAirconSettings.FanMode", jsonResponse.UserAirconSettings.FanMode.ToString(), ref _airConditionerData.FanMode);
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.FanMode", jsonResponse.UserAirconSettings.FanMode?.ToString(), ref _airConditionerData.FanMode);
 
 			// Set Cooling Temperature
-			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Cool_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Cool_oC.ToString(), ref _airConditionerData.SetTemperatureCooling);
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Cool_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Cool_oC?.ToString(), ref _airConditionerData.SetTemperatureCooling);
 
 			// Set Heating Temperature
-			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Heat_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Heat_oC.ToString(), ref _airConditionerData.SetTemperatureHeating);
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Heat_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Heat_oC?.ToString(), ref _airConditionerData.SetTemperatureHeating);
 
 			// Live Temperature
-			ProcessPartialStatus(lRequestId, "MasterInfo.LiveTemp_oC", jsonResponse.MasterInfo.LiveTemp_oC.ToString(), ref _airConditionerData.Temperature);
+			ProcessPartialStatus(lRequestId, "MasterInfo.LiveTemp_oC", jsonResponse.MasterInfo.LiveTemp_oC?.ToString(), ref _airConditionerData.Temperature);
 
 			// Live Temperature Outside
-			ProcessPartialStatus(lRequestId, "MasterInfo.LiveOutdoorTemp_oC", jsonResponse.MasterInfo.LiveOutdoorTemp_oC.ToString(), ref _airConditionerData.OutdoorTemperature);
+			ProcessPartialStatus(lRequestId, "MasterInfo.LiveOutdoorTemp_oC", jsonResponse.MasterInfo.LiveOutdoorTemp_oC?.ToString(), ref _airConditionerData.OutdoorTemperature);
 
 			// Live Humidity
-			ProcessPartialStatus(lRequestId, "MasterInfo.LiveHumidity_pc", jsonResponse.MasterInfo.LiveHumidity_pc.ToString(), ref _airConditionerData.Humidity);
+			ProcessPartialStatus(lRequestId, "MasterInfo.LiveHumidity_pc", jsonResponse.MasterInfo.LiveHumidity_pc?.ToString(), ref _airConditionerData.Humidity);
 
 			// Coil Inlet Temperature
-			ProcessPartialStatus(lRequestId, "LiveAircon.CoilInlet", jsonResponse.LiveAircon.CoilInlet.ToString(), ref _airConditionerData.CoilInletTemperature);
+			ProcessPartialStatus(lRequestId, "LiveAircon.CoilInlet", jsonResponse.LiveAircon.CoilInlet?.ToString(), ref _airConditionerData.CoilInletTemperature);
 
 			// Fan PWM
-			ProcessPartialStatus(lRequestId, "LiveAircon.FanPWM", jsonResponse.LiveAircon.FanPWM.ToString(), ref _airConditionerData.FanPWM);
+			ProcessPartialStatus(lRequestId, "LiveAircon.FanPWM", jsonResponse.LiveAircon.FanPWM?.ToString(), ref _airConditionerData.FanPWM);
 
 			// Fan RPM
-			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM.ToString(), ref _airConditionerData.FanRPM);
+			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM?.ToString(), ref _airConditionerData.FanRPM);
 
 			// Zones
 			aEnabledZones = jsonResponse.UserAirconSettings.EnabledZones;
@@ -752,22 +752,22 @@ namespace HMX.HASSActronQue
 				for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
 				{
 					// Enabled
-					ProcessPartialStatus(lRequestId, "UserAirconSettings.EnabledZones", aEnabledZones[iZoneIndex].ToString(), ref _airConditionerZones[iZoneIndex + 1].State);
+					ProcessPartialStatus(lRequestId, "UserAirconSettings.EnabledZones", aEnabledZones[iZoneIndex]?.ToString(), ref _airConditionerZones[iZoneIndex + 1].State);
 
 					// Temperature
-					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveTemp_oC.ToString(), ref _airConditionerZones[iZoneIndex + 1].Temperature);
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveTemp_oC?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Temperature);
 
 					// Cooling Set Temperature
-					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC.ToString(), ref _airConditionerZones[iZoneIndex + 1].SetTemperatureCooling);
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Cool_oC?.ToString(), ref _airConditionerZones[iZoneIndex + 1].SetTemperatureCooling);
 
 					// Heating Set Temperature
-					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC.ToString(), ref _airConditionerZones[iZoneIndex + 1].SetTemperatureHeating);
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].TemperatureSetpoint_Heat_oC?.ToString(), ref _airConditionerZones[iZoneIndex + 1].SetTemperatureHeating);
 
 					// Position
-					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].ZonePosition.ToString(), ref _airConditionerZones[iZoneIndex + 1].Position);
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].ZonePosition?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Position);
 
 					// Humidity
-					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc.ToString(), ref _airConditionerZones[iZoneIndex + 1].Humidity);
+					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Humidity);
 
 					// Battery
 					if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
@@ -775,7 +775,7 @@ namespace HMX.HASSActronQue
 						jObject = jsonResponse.RemoteZoneInfo[iZoneIndex].Sensors;
 
 						if (jObject.HasValues && jObject.First.HasValues)
-							ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex), jObject.First.First["Battery_pc"].ToString() ?? "", ref _airConditionerZones[iZoneIndex + 1].Battery);
+							ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].Sensors[0].Battery_pc", iZoneIndex), jObject.First.First["Battery_pc"]?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Battery);
 					}
 				}
 			}
@@ -787,7 +787,7 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
 
-			if (!double.TryParse(strValue, out dblTemp))
+			if (!double.TryParse(strValue ?? "", out dblTemp))
 				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
 			else
 			{
@@ -802,7 +802,7 @@ namespace HMX.HASSActronQue
 		{
 			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
 
-			if (strValue == "")
+			if ((strValue ?? "") == "")
 				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
 			else
 			{
@@ -819,7 +819,7 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
 
-			if (!bool.TryParse(strValue, out bTemp))
+			if (!bool.TryParse(strValue ?? "", out bTemp))
 				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
 			else
 			{
