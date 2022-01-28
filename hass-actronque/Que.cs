@@ -25,8 +25,7 @@ namespace HMX.HASSActronQue
 			Zone5 = 32,
 			Zone6 = 64,
 			Zone7 = 128,
-			Zone8 = 256,
-			All = 511
+			Zone8 = 256
 		}
 
 		private static string _strBaseURLQue = "https://que.actronair.com.au/";
@@ -655,7 +654,7 @@ namespace HMX.HASSActronQue
 
 					ProcessFullStatus(lRequestId, jsonResponse.lastKnownState);
 
-					updateItems = UpdateItems.All;
+					updateItems = UpdateItems.Main | UpdateItems.Zone1 | UpdateItems.Zone2 | UpdateItems.Zone3 | UpdateItems.Zone4 | UpdateItems.Zone5 | UpdateItems.Zone6 | UpdateItems.Zone7 | UpdateItems.Zone8;
 				}
 				else
 				{
@@ -1001,7 +1000,9 @@ namespace HMX.HASSActronQue
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
+										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 										updateItems |= (UpdateItems) (2 ^ (iIndex + 1));
+										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 
 										// Live Temperature
 										if (change.Name.EndsWith("].LiveTemp_oC"))
@@ -1028,8 +1029,11 @@ namespace HMX.HASSActronQue
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
+										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
 										updateItems |= UpdateItems.Main;
 										updateItems |= (UpdateItems)(2 ^ (iIndex + 1));
+										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Zone: {1} Update Items: {2}", lRequestId.ToString("X8"), iIndex + 1, updateItems.ToString());
+
 									}
 								}
 
@@ -1038,7 +1042,7 @@ namespace HMX.HASSActronQue
 							case "full-status-broadcast":
 								ProcessFullStatus(lRequestId, jsonResponse.events[iEvent].data);
 
-								updateItems |= UpdateItems.All;
+								updateItems |= UpdateItems.Main | UpdateItems.Zone1 | UpdateItems.Zone2 | UpdateItems.Zone3 | UpdateItems.Zone4 | UpdateItems.Zone5 | UpdateItems.Zone6 | UpdateItems.Zone7 | UpdateItems.Zone8;
 
 								break;
 						}
