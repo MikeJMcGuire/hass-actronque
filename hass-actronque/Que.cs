@@ -1001,7 +1001,7 @@ namespace HMX.HASSActronQue
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
-										updateItems |= (UpdateItems) ((iIndex + 1) ^ 2);
+										updateItems |= (UpdateItems) (2 ^ (iIndex + 1));
 
 										// Live Temperature
 										if (change.Name.EndsWith("].LiveTemp_oC"))
@@ -1029,7 +1029,7 @@ namespace HMX.HASSActronQue
 
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
 										updateItems |= UpdateItems.Main;
-										updateItems |= (UpdateItems)((iIndex + 1) ^ 2);
+										updateItems |= (UpdateItems)(2 ^ (iIndex + 1));
 									}
 								}
 
@@ -1518,7 +1518,7 @@ namespace HMX.HASSActronQue
 			// Zones
 			foreach (int iIndex in _airConditionerZones.Keys)
 			{
-				if (items.HasFlag((UpdateItems)(iIndex ^ 2)))
+				if (items.HasFlag((UpdateItems)(2 ^ iIndex)))
 				{
 					MQTT.SendMessage(string.Format("actronque/zone{0}", iIndex), _airConditionerZones[iIndex].State ? "ON" : "OFF");
 					MQTT.SendMessage(string.Format("actronque/zone{0}/temperature", iIndex), _airConditionerZones[iIndex].Temperature.ToString());
