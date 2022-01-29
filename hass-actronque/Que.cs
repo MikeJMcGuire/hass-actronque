@@ -748,10 +748,10 @@ namespace HMX.HASSActronQue
 				Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "UserAirconSettings.EnabledZones");
 			else
 			{
-				for (int iZoneIndex = 0; iZoneIndex < 8; iZoneIndex++)
+				for (int iZoneIndex = 0; iZoneIndex < _airConditionerZones.Count; iZoneIndex++)
 				{
 					// Enabled
-					ProcessPartialStatus(lRequestId, "UserAirconSettings.EnabledZones", aEnabledZones[iZoneIndex]?.ToString(), ref _airConditionerZones[iZoneIndex + 1].State);
+					ProcessPartialStatus(lRequestId, "UserAirconSettings.EnabledZones", aEnabledZones[iZoneIndex].ToString(), ref _airConditionerZones[iZoneIndex + 1].State);
 
 					// Temperature
 					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveTemp_oC", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveTemp_oC?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Temperature);
