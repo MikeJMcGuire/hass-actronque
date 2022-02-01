@@ -999,35 +999,41 @@ namespace HMX.HASSActronQue
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
-										updateItems |= (UpdateItems) Math.Pow(2, iIndex + 1);
-										
-										// Live Temperature
-										if (change.Name.EndsWith("].LiveTemp_oC"))
-											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Temperature);
-										// Cooling Set Temperature
-										else if (change.Name.EndsWith("].TemperatureSetpoint_Cool_oC"))
-											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].SetTemperatureCooling);
-										// Heating Set Temperature
-										else if (change.Name.EndsWith("].TemperatureSetpoint_Heat_oC"))
-											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].SetTemperatureHeating);
-										// Zone Position
-										else if (change.Name.EndsWith("].ZonePosition"))
-											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Position);
-										// Humidity
-										else if (change.Name.EndsWith("].LiveHumidity_pc"))
-											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Humidity);
-										// Battery
-										else if (change.Name.EndsWith(".Battery_pc"))
-											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Battery);
+										if (_airConditionerZones.ContainsKey(iIndex + 1))
+										{
+											updateItems |= (UpdateItems)Math.Pow(2, iIndex + 1);
+
+											// Live Temperature
+											if (change.Name.EndsWith("].LiveTemp_oC"))
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Temperature);
+											// Cooling Set Temperature
+											else if (change.Name.EndsWith("].TemperatureSetpoint_Cool_oC"))
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].SetTemperatureCooling);
+											// Heating Set Temperature
+											else if (change.Name.EndsWith("].TemperatureSetpoint_Heat_oC"))
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].SetTemperatureHeating);
+											// Zone Position
+											else if (change.Name.EndsWith("].ZonePosition"))
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Position);
+											// Humidity
+											else if (change.Name.EndsWith("].LiveHumidity_pc"))
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Humidity);
+											// Battery
+											else if (change.Name.EndsWith(".Battery_pc"))
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Battery);
+										}
 									}
 									// Enabled Zone
 									else if (change.Name.StartsWith("UserAirconSettings.EnabledZones["))
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 
-										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
-										updateItems |= UpdateItems.Main;
-										updateItems |= (UpdateItems) Math.Pow(2, iIndex + 1);
+										if (_airConditionerZones.ContainsKey(iIndex + 1))
+										{
+											ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].State);
+											updateItems |= UpdateItems.Main;
+											updateItems |= (UpdateItems)Math.Pow(2, iIndex + 1);
+										}
 									}
 								}
 
