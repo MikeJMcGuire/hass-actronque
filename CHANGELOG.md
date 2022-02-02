@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Fix for Neo systems.
+- Update to MQTT library.
 
 ## [v2022.1.4] - 2022-01-29
 

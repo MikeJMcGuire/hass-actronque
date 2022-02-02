@@ -769,7 +769,7 @@ namespace HMX.HASSActronQue
 					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Humidity);
 
 					// Battery
-					if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
+					if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors") & _strSystemType == "que")
 					{
 						jObject = jsonResponse.RemoteZoneInfo[iZoneIndex].Sensors;
 
@@ -1019,7 +1019,7 @@ namespace HMX.HASSActronQue
 											else if (change.Name.EndsWith("].LiveHumidity_pc"))
 												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Humidity);
 											// Battery
-											else if (change.Name.EndsWith(".Battery_pc"))
+											else if (change.Name.EndsWith(".Battery_pc") & _strSystemType == "que")
 												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Battery);
 										}
 									}
@@ -1531,8 +1531,11 @@ namespace HMX.HASSActronQue
 					// Per Zone Controls
 					if (_bPerZoneControls)
 					{
-						MQTT.SendMessage(string.Format("actronque/zone{0}/humidity", iIndex), _airConditionerZones[iIndex].Humidity.ToString("F1"));
-						MQTT.SendMessage(string.Format("actronque/zone{0}/battery", iIndex), _airConditionerZones[iIndex].Battery.ToString("F1"));
+						if (_strSystemType == "que")
+						{
+							MQTT.SendMessage(string.Format("actronque/zone{0}/humidity", iIndex), _airConditionerZones[iIndex].Humidity.ToString("F1"));
+							MQTT.SendMessage(string.Format("actronque/zone{0}/battery", iIndex), _airConditionerZones[iIndex].Battery.ToString("F1"));
+						}
 
 						if (!_airConditionerData.On)
 						{
