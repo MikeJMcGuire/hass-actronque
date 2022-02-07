@@ -7,12 +7,18 @@ using System.Threading;
 
 namespace HMX.HASSActronQue
 {
-    internal class Service
-    {
+	internal class Service
+	{
 		private static string _strServiceName = "hass-actronque";
 		private static string _strDeviceNameMQTT = "Actron Que Air Conditioner";
 		private static string _strConfigFile = "/data/options.json";
 		private static ManualResetEvent _eventStop = new ManualResetEvent(false);
+		private static bool _bDevelopment = false;
+
+		public static bool IsDevelopment
+		{
+			get { return _bDevelopment; }
+		}
 
 		public static string ServiceName
 		{
@@ -112,6 +118,14 @@ namespace HMX.HASSActronQue
 
 			MQTT.StopMQTT();
 		}
+
+		public static void SetDevelopmment()
+		{
+			Logging.WriteDebugLog("Service.SetDevelopmment()");
+
+			_bDevelopment = true;
+		}
+
 
 		private static void MQTTProcessor(string strTopic, string strPayload)
 		{
