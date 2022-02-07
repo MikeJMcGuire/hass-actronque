@@ -41,6 +41,7 @@ namespace HMX.HASSActronQue
 
 			try
 			{
+				services.AddHttpClient();
 				services.AddControllers();
 				services.AddHttpContextAccessor();
 				services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();

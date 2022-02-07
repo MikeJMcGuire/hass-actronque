@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HMX.HASSActronQue
 {
@@ -109,6 +110,8 @@ namespace HMX.HASSActronQue
 				Logging.WriteDebugLogError("Service.Start()", eException, "Unable to build Kestrel instance.");
 				return;
 			}
+
+			var x = webHost.Services.GetService<HttpClient>();
 
 			webHost.Run();
 		}
