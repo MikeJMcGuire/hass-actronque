@@ -77,33 +77,36 @@ namespace HMX.HASSActronQue
 
 		static Que()
 		{
-			/*HttpClientHandler httpClientHandler = new HttpClientHandler();
+			HttpClientHandler httpClientHandler = new HttpClientHandler();
 
 			Logging.WriteDebugLog("Que.Que()");
 
 			if (httpClientHandler.SupportsAutomaticDecompression)
 				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
 
-			_httpClientAuth = new HttpClient(httpClientHandler);
+			if (Service.IsDevelopment)
+			{
+				_httpClientAuth = new HttpClient(new LoggingClientHandler(httpClientHandler));
 
-			_httpClient = new HttpClient(httpClientHandler);
+				_httpClient = new HttpClient(new LoggingClientHandler(httpClientHandler));
 
-			_httpClientCommands = new HttpClient(httpClientHandler);*/
+				_httpClientCommands = new HttpClient(new LoggingClientHandler(httpClientHandler));
+			}
+			else
+			{
+				_httpClientAuth = new HttpClient(httpClientHandler);
+
+				_httpClient = new HttpClient(httpClientHandler);
+
+				_httpClientCommands = new HttpClient(httpClientHandler);
+			}
 		}
 
-		public static async void Initialise(IHost webHost, string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
-			HttpClientHandler httpClientHandler = new HttpClientHandler();
 
 			Logging.WriteDebugLog("Que.Initialise()");
-
-			if (httpClientHandler.SupportsAutomaticDecompression)
-				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
-
-			_httpClientAuth = new HttpClient(new LoggingHandler(httpClientHandler)); // = webHost.Services.GetService<HttpClient>();
-			_httpClient = new HttpClient(new LoggingHandler(httpClientHandler)); ;
-			_httpClientCommands = new HttpClient(new LoggingHandler(httpClientHandler)); ;
 
 			_strQueUser = strQueUser;
 			_strQuePassword = strQuePassword;
