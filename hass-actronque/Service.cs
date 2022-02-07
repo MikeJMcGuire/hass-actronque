@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Threading;
+using System.Net.Http;
 
 namespace HMX.HASSActronQue
 {

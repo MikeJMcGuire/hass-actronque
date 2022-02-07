@@ -23,7 +23,6 @@ namespace HMX.HASSActronQue
 
 			try
 			{
-				applicationBuilder.UseHttpLogging();
 				applicationBuilder.UseRouting();
 				applicationBuilder.UseEndpoints(endpoints =>
 				{
@@ -42,15 +41,6 @@ namespace HMX.HASSActronQue
 
 			try
 			{
-				services.AddHttpLogging(logging =>
-				{
-					logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.All;
-					logging.RequestHeaders.Add("Accept-Encoding");
-					logging.ResponseHeaders.Add("Content-Encoding");
-					logging.RequestBodyLogLimit = 4096;
-					logging.ResponseBodyLogLimit = 4096;
-				});
-				services.AddHttpClient();
 				services.AddControllers();
 				services.AddHttpContextAccessor();
 				services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
