@@ -50,6 +50,7 @@ namespace HMX.HASSActronQue
 					logging.RequestBodyLogLimit = 4096;
 					logging.ResponseBodyLogLimit = 4096;
 				});
+				services.AddHttpClient();
 				services.AddControllers();
 				services.AddHttpContextAccessor();
 				services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
