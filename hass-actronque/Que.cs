@@ -570,7 +570,7 @@ namespace HMX.HASSActronQue
 								{
 									foreach (JProperty sensor in jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors)
 									{
-										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone Sensor: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, sensor.ToString());
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone Sensor: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, sensor.Name, sensor["Battery_pc"].ToString());
 									}
 								}
 									
