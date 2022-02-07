@@ -44,6 +44,9 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Service.Start() Build Date: {0}", Properties.Resources.BuildDate);
 
+			if ((Environment.GetEnvironmentVariable("Development") ?? "") == "True")
+				SetDevelopmment();
+
 			// Load Configuration
 			try
 			{
@@ -107,12 +110,11 @@ namespace HMX.HASSActronQue
 				return;
 			}
 
-			webHost.Run();
-
 			MQTT.StartMQTT(strMQTTBroker, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
-			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, _eventStop);		
-			
+			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, _eventStop);
+
+			webHost.Run();
 		}
 
 		public static void Stop()
