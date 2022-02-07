@@ -23,6 +23,7 @@ namespace HMX.HASSActronQue
 
 			try
 			{
+				applicationBuilder.UseHttpLogging();
 				applicationBuilder.UseRouting();
 				applicationBuilder.UseEndpoints(endpoints =>
 				{
