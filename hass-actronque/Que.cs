@@ -713,7 +713,6 @@ namespace HMX.HASSActronQue
 		private static void ProcessFullStatus(long lRequestId, dynamic jsonResponse)
 		{
 			JArray aEnabledZones;
-			JObject jObject;
 
 			Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}]", lRequestId.ToString("X8"));
 
