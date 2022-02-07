@@ -47,6 +47,8 @@ namespace HMX.HASSActronQue
 					logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.All;
 					logging.RequestHeaders.Add("Accept-Encoding");
 					logging.ResponseHeaders.Add("Content-Encoding");
+					logging.RequestBodyLogLimit = 4096;
+					logging.ResponseBodyLogLimit = 4096;
 				});
 				services.AddControllers();
 				services.AddHttpContextAccessor();
