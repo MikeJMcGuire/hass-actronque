@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2022.2.1] - 2022-02-07
+
+### Added
+
+- Added support for zones with multiple sensors.
+
 ## [v2022.2.0] - 2022-02-01
 
 ### Changed

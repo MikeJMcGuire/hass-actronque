@@ -180,7 +180,7 @@ namespace HMX.HASSActronQue
 
 			dtFormContent.Add("username", _strQueUser);
 			dtFormContent.Add("password", _strQuePassword);
-			dtFormContent.Add("deviceName", _strDeviceName);
+			dtFormContent.Add("deviceName", Service.IsDevelopment ? _strDeviceName + "Dev" : _strDeviceName);
 			dtFormContent.Add("client", "ios");
 			dtFormContent.Add("deviceUniqueIdentifier", _strDeviceUniqueIdentifier);
 
