@@ -101,9 +101,9 @@ namespace HMX.HASSActronQue
 			if (httpClientHandler.SupportsAutomaticDecompression)
 				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
 
-			_httpClientAuth = webHost.Services.GetService<HttpClient>();
-			_httpClient = webHost.Services.GetService<HttpClient>();
-			_httpClientCommands = webHost.Services.GetService<HttpClient>();
+			_httpClientAuth = new HttpClient(new LoggingHandler(httpClientHandler)); // = webHost.Services.GetService<HttpClient>();
+			_httpClient = new HttpClient(new LoggingHandler(httpClientHandler)); ;
+			_httpClientCommands = new HttpClient(new LoggingHandler(httpClientHandler)); ;
 
 			_strQueUser = strQueUser;
 			_strQuePassword = strQuePassword;
