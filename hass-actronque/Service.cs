@@ -94,10 +94,6 @@ namespace HMX.HASSActronQue
 				}
 			}
 
-			MQTT.StartMQTT(strMQTTBroker, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
-
-			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, _eventStop);
-
 			try
 			{
 				webHost = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
@@ -111,8 +107,10 @@ namespace HMX.HASSActronQue
 				return;
 			}
 
-			var x = webHost.Services.GetService<HttpClient>();
+			MQTT.StartMQTT(strMQTTBroker, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
+			Que.Initialise(webHost, strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, _eventStop);
+			
 			webHost.Run();
 		}
 

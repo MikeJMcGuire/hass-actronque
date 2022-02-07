@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -75,7 +77,7 @@ namespace HMX.HASSActronQue
 
 		static Que()
 		{
-			HttpClientHandler httpClientHandler = new HttpClientHandler();
+			/*HttpClientHandler httpClientHandler = new HttpClientHandler();
 
 			Logging.WriteDebugLog("Que.Que()");
 
@@ -86,14 +88,22 @@ namespace HMX.HASSActronQue
 
 			_httpClient = new HttpClient(httpClientHandler);
 
-			_httpClientCommands = new HttpClient(httpClientHandler);
+			_httpClientCommands = new HttpClient(httpClientHandler);*/
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, ManualResetEvent eventStop)
+		public static async void Initialise(IHost webHost, string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
+			HttpClientHandler httpClientHandler = new HttpClientHandler();
 
 			Logging.WriteDebugLog("Que.Initialise()");
+
+			if (httpClientHandler.SupportsAutomaticDecompression)
+				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+
+			_httpClientAuth = webHost.Services.GetService<HttpClient>();
+			_httpClient = webHost.Services.GetService<HttpClient>();
+			_httpClientCommands = webHost.Services.GetService<HttpClient>();
 
 			_strQueUser = strQueUser;
 			_strQuePassword = strQuePassword;
