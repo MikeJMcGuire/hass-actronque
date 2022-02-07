@@ -572,7 +572,7 @@ namespace HMX.HASSActronQue
 									foreach (JProperty sensorJson in jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors)
 									{
 										sensor = new AirConditionerSensor();
-										sensor.Name = iZoneIndex + 1 + " Sensor " + sensorJson.Name;
+										sensor.Name = zone.Name + " Sensor " + sensorJson.Name;
 										sensor.Serial = sensorJson.Name;
 
 										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone Sensor: {1}", lRequestId.ToString("X8"), sensorJson.Name);
