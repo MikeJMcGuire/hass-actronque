@@ -525,6 +525,7 @@ namespace HMX.HASSActronQue
 			bool bRetVal = true;
 			Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
 			AirConditionerZone zone;
+			AirConditionerSensor sensor;
 
 			Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, _strSerialNumber);
 
@@ -568,9 +569,15 @@ namespace HMX.HASSActronQue
 
 								if (jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
 								{
-									foreach (JProperty sensor in jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors)
+									foreach (JProperty sensorJson in jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].Sensors)
 									{
-										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone Sensor: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, sensor.Name);
+										sensor = new AirConditionerSensor();
+										sensor.Name = iZoneIndex + 1 + " Sensor " + sensorJson.Name;
+										sensor.Serial = sensorJson.Name;
+
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone Sensor: {1}", lRequestId.ToString("X8"), sensorJson.Name);
+
+										zone.Sensors.Add(sensorJson.Name, sensor);
 									}
 								}
 									
