@@ -2,10 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.IO;
 using System.Threading;
-using System.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace HMX.HASSActronQue
 {
@@ -44,8 +41,12 @@ namespace HMX.HASSActronQue
 
 			Logging.WriteDebugLog("Service.Start() Build Date: {0}", Properties.Resources.BuildDate);
 
-			if ((Environment.GetEnvironmentVariable("Development") ?? "") == "True")
-				SetDevelopmment();
+			// Environment Check
+			if ((Environment.GetEnvironmentVariable("Development") ?? "").ToLower() == "true")
+			{
+				_bDevelopment = true;
+				Logging.WriteDebugLog("Service.Start() Development Mode");
+			}
 
 			// Load Configuration
 			try
@@ -106,7 +107,7 @@ namespace HMX.HASSActronQue
 			}
 			catch (Exception eException)
 			{
-				Logging.WriteDebugLogError("Service.Start()", eException, "Unable to build Kestrel instance.");
+				Logging.WriteDebugLogError("Service.Start()", eException, "Unable to build web server instance.");
 				return;
 			}
 
@@ -125,14 +126,6 @@ namespace HMX.HASSActronQue
 
 			MQTT.StopMQTT();
 		}
-
-		public static void SetDevelopmment()
-		{
-			Logging.WriteDebugLog("Service.SetDevelopmment()");
-
-			_bDevelopment = true;
-		}
-
 
 		private static void MQTTProcessor(string strTopic, string strPayload)
 		{

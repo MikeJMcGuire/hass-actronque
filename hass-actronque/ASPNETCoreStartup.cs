@@ -18,9 +18,6 @@ namespace HMX.HASSActronQue
 			applicationLifetime.ApplicationStopping.Register(OnStopping);
 			applicationLifetime.ApplicationStopped.Register(OnStopped);
 
-			if (environment.IsDevelopment())
-				Service.SetDevelopmment();
-
 			try
 			{
 				applicationBuilder.UseRouting();

@@ -9,11 +9,11 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Changed per zone battery to per sensor battery to better reflect the data model from Actron.
+- Changed per zone battery to per sensor battery to better reflect the data model from Actron. Use the PerZoneSensors option to create the entities in HA.
 
 ### Removed
 
-- Removed per zone humidity sensors - the zone sensors don't measure humidity.
+- Removed per zone humidity sensors - the zone sensors don't measure humidity, even though they sometimes report a value.
 
 ## [v2022.2.0] - 2022-02-01
 
