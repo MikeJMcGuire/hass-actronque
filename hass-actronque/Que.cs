@@ -783,6 +783,19 @@ namespace HMX.HASSActronQue
 					// Position
 					ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].ZonePosition?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Position);
 
+					// Zone Sensors
+					if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors") & _strSystemType == "que")
+					{
+						foreach (JProperty sensor in jsonResponse.RemoteZoneInfo[iZoneIndex].Sensors)
+						{
+							if (_airConditionerZones[iZoneIndex + 1].Sensors.ContainsKey(sensor.Name))
+							{
+								Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Battery: {1}", lRequestId.ToString("X8"), jsonResponse.RemoteZoneInfo[iZoneIndex].Sensors[sensor.Name].Battery_pc);
+								
+							}
+						}
+					}
+
 					// Humidity
 					// ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].LiveHumidity_pc", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].LiveHumidity_pc?.ToString(), ref _airConditionerZones[iZoneIndex + 1].Humidity);
 
@@ -1034,6 +1047,8 @@ namespace HMX.HASSActronQue
 											// Zone Position
 											else if (change.Name.EndsWith("].ZonePosition"))
 												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Position);
+
+
 											// Humidity
 											//else if (change.Name.EndsWith("].LiveHumidity_pc"))
 											//	ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref _airConditionerZones[iIndex + 1].Humidity);
