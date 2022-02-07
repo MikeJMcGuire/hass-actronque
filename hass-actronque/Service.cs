@@ -42,7 +42,7 @@ namespace HMX.HASSActronQue
 			int iPollInterval;
 			bool bPerZoneControls, bPerZoneSensors, bMQTTTLS;
 
-			Logging.WriteDebugLog("Service.Start() Build Date: {0}{1}", Properties.Resources.BuildDate, _bDevelopment ? " (Development Mode)" : "");
+			Logging.WriteDebugLog("Service.Start() Build Date: {0}", Properties.Resources.BuildDate);
 
 			// Load Configuration
 			try
@@ -107,11 +107,12 @@ namespace HMX.HASSActronQue
 				return;
 			}
 
+			webHost.Run();
+
 			MQTT.StartMQTT(strMQTTBroker, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
-			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, _eventStop);
+			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, _eventStop);		
 			
-			webHost.Run();
 		}
 
 		public static void Stop()
