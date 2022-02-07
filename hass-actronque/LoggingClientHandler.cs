@@ -11,9 +11,12 @@ namespace HMX.HASSActronQue
 
 		protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			HttpResponseMessage response = await base.SendAsync(request, cancellationToken); 
-			
+			HttpResponseMessage response;
+
 			Logging.WriteDebugLog("Request: {0}", request.ToString());
+
+			response = await base.SendAsync(request, cancellationToken); 			
+			
 			Logging.WriteDebugLog("Response: {0}", response.ToString());
 
 			return response;
