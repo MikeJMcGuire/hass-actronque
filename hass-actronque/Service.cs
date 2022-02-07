@@ -62,7 +62,7 @@ namespace HMX.HASSActronQue
 			if (!Configuration.GetConfiguration(configuration, "PerZoneControls", out bPerZoneControls))
 				return;
 
-			Configuration.GetOptionalConfiguration(configuration, "bPerZoneSensors", out bPerZoneSensors);		
+			Configuration.GetOptionalConfiguration(configuration, "PerZoneSensors", out bPerZoneSensors);		
 
 			if (!Configuration.GetConfiguration(configuration, "PollInterval", out iPollInterval) || iPollInterval < 10 || iPollInterval > 300)
 			{
