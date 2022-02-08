@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Rounded per zone temperature to one decimal place.
 - Aligned per sensor temperature entities' units to climate entities.
 
 ## [v2022.2.2] - 2022-02-08

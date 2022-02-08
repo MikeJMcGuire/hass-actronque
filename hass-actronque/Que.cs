@@ -1579,7 +1579,7 @@ namespace HMX.HASSActronQue
 				if (items.HasFlag((UpdateItems)Math.Pow(2, iIndex)))
 				{
 					MQTT.SendMessage(string.Format("actronque/zone{0}", iIndex), _airConditionerZones[iIndex].State ? "ON" : "OFF");
-					MQTT.SendMessage(string.Format("actronque/zone{0}/temperature", iIndex), _airConditionerZones[iIndex].Temperature.ToString());
+					MQTT.SendMessage(string.Format("actronque/zone{0}/temperature", iIndex), _airConditionerZones[iIndex].Temperature.ToString("N1"));
 					MQTT.SendMessage(string.Format("actronque/zone{0}/position", iIndex), (_airConditionerZones[iIndex].Position * 5).ToString()); // 0-20 numeric displayed as 0-100 percentage
 
 					// Per Zone Controls
@@ -1626,8 +1626,8 @@ namespace HMX.HASSActronQue
 					{
 						foreach (AirConditionerSensor sensor in _airConditionerZones[iIndex].Sensors.Values)
 						{
-							MQTT.SendMessage(string.Format("actronque/zone{0}sensor{1}/temperature", iIndex, sensor.Serial), sensor.Temperature.ToString("F1"));
-							MQTT.SendMessage(string.Format("actronque/zone{0}sensor{1}/battery", iIndex, sensor.Serial), sensor.Battery.ToString("F1"));
+							MQTT.SendMessage(string.Format("actronque/zone{0}sensor{1}/temperature", iIndex, sensor.Serial), sensor.Temperature.ToString("N1"));
+							MQTT.SendMessage(string.Format("actronque/zone{0}sensor{1}/battery", iIndex, sensor.Serial), sensor.Battery.ToString("N1"));
 						}
 					}
 				}
