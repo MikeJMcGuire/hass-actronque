@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix for Neo Systems that don't generate Actron Events.
 - Added additional HA attributes to battery entities.
+- Added battery entities to PerZoneControls (already in PerZoneSensors).
 
 ## [v2022.5.0] - 2022-05-30
 
