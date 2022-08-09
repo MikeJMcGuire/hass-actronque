@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Fix for Neo Systems that don't generate Actron Events
+- Fix for Neo Systems that don't generate Actron Events.
+- Added additional HA attributes to battery entities.
 
 ## [v2022.5.0] - 2022-05-30
 
