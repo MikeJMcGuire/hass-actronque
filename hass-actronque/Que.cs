@@ -160,8 +160,6 @@ namespace HMX.HASSActronQue
 							Logging.WriteDebugLogError("Que.Initialise()", eException, "Unable to update json file.");
 						}
 					}					
-
-					Logging.WriteDebugLog("Que.Initialise() Device Id: {0}", _strDeviceUniqueIdentifier);
 				}
 			}
 			catch (Exception eException)
