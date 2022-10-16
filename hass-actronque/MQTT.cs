@@ -141,7 +141,7 @@ namespace HMX.HASSActronQue
 				SendMessage(string.Format("{0}/status", _strClientId.ToLower()), "online");
 		}
 
-		public static void StopMQTT()
+		public static async void StopMQTT()
 		{
 			Logging.WriteDebugLog("MQTT.StopMQTT()");
 
@@ -151,7 +151,10 @@ namespace HMX.HASSActronQue
 
 			Thread.Sleep(500);
 
-			_mqtt.StopAsync();
+			await _mqtt.StopAsync();
+
+			Thread.Sleep(50);
+
 			_mqtt.Dispose();
 
 			_mqtt = null;
