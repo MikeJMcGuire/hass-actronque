@@ -1486,6 +1486,7 @@ namespace HMX.HASSActronQue
 				return;
 			}
 
+			
 			if (items.HasFlag(UpdateItems.Main))
 			{
 				// Fan Mode
