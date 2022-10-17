@@ -499,6 +499,14 @@ namespace HMX.HASSActronQue
 
 					strResponse = strResponse.Replace("ac-system", "acsystem");
 
+					if (!strResponse.Contains("acsystem"))
+					{
+						Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] No data returned from Que service - check Que user name and password.");
+						
+						bRetVal = false;
+						goto Cleanup;
+					}
+
 					jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
 					for (int iIndex = 0; iIndex < jsonResponse._embedded.acsystem.Count; iIndex++)
