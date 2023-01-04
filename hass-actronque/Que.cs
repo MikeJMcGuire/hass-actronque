@@ -521,7 +521,7 @@ namespace HMX.HASSActronQue
 
 						if (_strSerialNumber == "" || _strSerialNumber == strSerial)
 						{
-							unit = new AirConditionerUnit(strDescription, strSerial);
+							unit = new AirConditionerUnit(strDescription.Trim(), strSerial);
 							_airConditionerUnits.Add(strSerial, unit);
 
 							Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Monitoring AC: {1}", lRequestId.ToString("X8"), strSerial);
