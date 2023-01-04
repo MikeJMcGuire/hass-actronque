@@ -1463,9 +1463,9 @@ namespace HMX.HASSActronQue
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}outdoortemperature/config", strHANameModifier), "");
 				}
 
-				foreach (int iZone in _airConditionerUnits.Values.First().Zones.Keys)
+				foreach (int iZone in unit.Zones.Keys)
 				{
-					zone = _airConditionerUnits.Values.First().Zones[iZone];
+					zone = unit.Zones[iZone];
 
 					// Zone
 					if (zone.Exists)
