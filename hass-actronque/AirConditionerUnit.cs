@@ -16,6 +16,7 @@ namespace HMX.HASSActronQue
 		{
 			Name = strName;
 			Serial = strSerial;
+			NextEventURL = "";
 			Data = new AirConditionerData();
 			Zones = new Dictionary<int, AirConditionerZone>();
 		}
