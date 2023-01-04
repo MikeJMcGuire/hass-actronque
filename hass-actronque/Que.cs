@@ -1527,7 +1527,7 @@ namespace HMX.HASSActronQue
 
 		private static void MQTTUpdateData(AirConditionerUnit unit, UpdateItems items)
 		{
-			Logging.WriteDebugLog("Que.MQTTUpdateData() Unit:{0}, Items: {1}", unit.Serial, items.ToString());
+			Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Items: {1}", unit.Serial, items.ToString());
 
 			if (unit.Data.LastUpdated == DateTime.MinValue)
 			{
