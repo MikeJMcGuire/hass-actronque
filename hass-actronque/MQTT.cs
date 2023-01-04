@@ -150,7 +150,8 @@ namespace HMX.HASSActronQue
 
 			_timerMQTT.Dispose();
 
-			SendMessage(string.Format("{0}/status", _strClientId.ToLower()), "offline");
+			foreach (AirConditionerUnit unit in Que.Units.Values)
+				SendMessage(string.Format("{0}{1}/status", _strClientId.ToLower(), unit.Serial), "offline");
 
 			Thread.Sleep(500);
 
