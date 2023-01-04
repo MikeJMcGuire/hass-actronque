@@ -943,7 +943,7 @@ namespace HMX.HASSActronQue
 			else
 				strPageURL = unit.NextEventURL;
 
-			Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL);
+			Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Unit: {1}, Base: {2}{3}", lRequestId.ToString("X8"), unit.Serial, _httpClient.BaseAddress, strPageURL);
 
 			if (!IsTokenValid())
 			{
