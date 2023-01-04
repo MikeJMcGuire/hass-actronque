@@ -1,7 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2023.1.0] - 2023-01-04
+
+### Added
+
+- Added support for multiple AC units controlled by a single Que controller.
+
+### Changed
+
+- The MQTT topics have been changed to accomodate multiple AC units.
+
 ## [v2022.10.3] - 2022-10-17
+
+### Added
 
 - Added logic to regenerate the pairing token and device identication files when the email address changes.
 - Added logic to identify authentication issues when email addresses change.
