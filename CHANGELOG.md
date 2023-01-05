@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - The MQTT topics have been changed to accomodate multiple AC units.
+- The device created in HA has been updated with additional AC specific information - this may impact device and entity identifiers as a result of now supporting multiple AC units.
 
 ## [v2022.10.3] - 2022-10-17
 

@@ -577,7 +577,7 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
+			//Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
 			AirConditionerZone zone;
 			AirConditionerSensor sensor;
 
