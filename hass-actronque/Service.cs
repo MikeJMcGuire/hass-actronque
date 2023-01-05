@@ -149,7 +149,7 @@ namespace HMX.HASSActronQue
 			// Per Zone Temperature
 			if (strTopic.StartsWith(strUnitHeader + "/zone") && strTopic.EndsWith("/temperature/set"))
 			{
-				iZone = int.Parse(strTopic.Substring(14, 1));
+				iZone = int.Parse(strTopic.Substring(strUnitHeader.Length + 5, 1));
 
 				if (double.TryParse(strPayload, out dblTemperature))
 					Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, iZone);
@@ -157,7 +157,7 @@ namespace HMX.HASSActronQue
 			// Per Zone Mode
 			else if (strTopic.StartsWith(strUnitHeader + "/zone") && strTopic.EndsWith("/mode/set"))
 			{
-				iZone = int.Parse(strTopic.Substring(14, 1));
+				iZone = int.Parse(strTopic.Substring(strUnitHeader.Length + 5, 1));
 
 				switch (strPayload)
 				{
@@ -194,7 +194,7 @@ namespace HMX.HASSActronQue
 			// Zone
 			else if (strTopic.StartsWith(strUnitHeader + "/zone") && strTopic.EndsWith("/set"))
 			{
-				iZone = int.Parse(strTopic.Substring(14, 1));
+				iZone = int.Parse(strTopic.Substring(strUnitHeader.Length + 5, 1));
 
 				Que.ChangeZone(lRequestId, Que.Units[strUnit], iZone, strPayload == "ON" ? true : false);
 			}
