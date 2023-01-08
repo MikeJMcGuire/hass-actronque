@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## [v2023.1.0] - 2023-01-04
 
+There is a reported issue with this version affecting Raspberry Pi devices. If the add-on crashes after the upgrade, uninstall and reinstall the add-on.
+
 ### Added
 
 - Added support for multiple AC units controlled by a single Que controller.
