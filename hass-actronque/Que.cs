@@ -1493,8 +1493,14 @@ namespace HMX.HASSActronQue
 						// Per Zone Controls
 						if (_bPerZoneControls)
 						{
-							MQTT.SendMessage(string.Format("homeassistant/climate/actronque{0}/zone{1}/config", strHANameModifier, iZone), "{{\"name\":\"{0} {3}\",\"unique_id\":\"{2}-z{1}ac\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"mode_command_topic\":\"actronque{5}/zone{1}/mode/set\",\"temperature_command_topic\":\"actronque{5}/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque{5}/zone{1}/settemperature\",\"mode_state_topic\":\"actronque{5}/zone{1}/mode\",\"current_temperature_topic\":\"actronque{5}/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", zone.Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+							if (!_bSeparateHeatCool) // Default
+								MQTT.SendMessage(string.Format("homeassistant/climate/actronque{0}/zone{1}/config", strHANameModifier, iZone), "{{\"name\":\"{0} {3}\",\"unique_id\":\"{2}-z{1}ac\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"mode_command_topic\":\"actronque{5}/zone{1}/mode/set\",\"temperature_command_topic\":\"actronque{5}/zone{1}/temperature/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_state_topic\":\"actronque{5}/zone{1}/settemperature\",\"mode_state_topic\":\"actronque{5}/zone{1}/mode\",\"current_temperature_topic\":\"actronque{5}/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", zone.Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+							else
+								MQTT.SendMessage(string.Format("homeassistant/climate/actronque{0}/zone{1}/config", strHANameModifier, iZone), "{{\"name\":\"{0} {3}\",\"unique_id\":\"{2}-z{1}ac\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"mode_command_topic\":\"actronque{5}/zone{1}/mode/set\",\"temperature_high_command_topic\":\"actronque{5}/zone{1}/temperature/high/set\",\"temperature_low_command_topic\":\"actronque{5}/zone{1}/temperature/low/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"temperature_high_state_topic\":\"actronque{5}/zone{1}/settemperature/high\",\"temperature_low_state_topic\":\"actronque{5}/zone{1}/settemperature/low\",\"mode_state_topic\":\"actronque{5}/zone{1}/mode\",\"current_temperature_topic\":\"actronque{5}/zone{1}/temperature\",\"availability_topic\":\"{2}/status\"}}", zone.Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+
 							MQTT.Subscribe("actronque{0}/zone{1}/temperature/set", unit.Serial, iZone);
+							MQTT.Subscribe("actronque{0}/zone{1}/temperature/high/set", unit.Serial, iZone);
+							MQTT.Subscribe("actronque{0}/zone{1}/temperature/low/set", unit.Serial, iZone);
 							MQTT.Subscribe("actronque{0}/zone{1}/mode/set", unit.Serial, iZone);
 
 							foreach (string sensor in zone.Sensors.Keys)
@@ -1538,6 +1544,8 @@ namespace HMX.HASSActronQue
 				MQTT.Subscribe("actronque{0}/mode/set", unit.Serial);
 				MQTT.Subscribe("actronque{0}/fan/set", unit.Serial);
 				MQTT.Subscribe("actronque{0}/temperature/set", unit.Serial);
+				MQTT.Subscribe("actronque{0}/temperature/high/set", unit.Serial);
+				MQTT.Subscribe("actronque{0}/temperature/low/set", unit.Serial);
 
 				iDeviceIndex++;
 			}		
@@ -1959,12 +1967,12 @@ namespace HMX.HASSActronQue
 					break;
 
 				case TemperatureSetType.Low:
-					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
+					command.Data.command.Add(string.Format("{0}.TemperatureSetpoint_Heat_oC", strCommandPrefix), dblTemperature);
 
 					break;
 
 				case TemperatureSetType.High:
-					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
+					command.Data.command.Add(string.Format("{0}.TemperatureSetpoint_Cool_oC", strCommandPrefix), dblTemperature);
 
 					break;							
 			}
