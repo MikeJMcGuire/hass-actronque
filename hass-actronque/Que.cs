@@ -1613,9 +1613,6 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("actronque{0}/humidity", unit.Serial), unit.Data.Humidity.ToString("N1"));
 
 				// Power, Mode & Set Temperature
-				MQTT.SendMessage(string.Format("actronque{0}/settemperature/high", unit.Serial), unit.Data.SetTemperatureCooling.ToString("N1"));
-				MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
-
 				if (!unit.Data.On)
 				{
 					MQTT.SendMessage(string.Format("actronque{0}/mode", unit.Serial), "off");
@@ -1650,6 +1647,9 @@ namespace HMX.HASSActronQue
 							break;
 					}
 				}
+
+				MQTT.SendMessage(string.Format("actronque{0}/settemperature/high", unit.Serial), unit.Data.SetTemperatureCooling.ToString("N1"));
+				MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
 
 				// Compressor
 				switch (unit.Data.CompressorState)
@@ -1711,9 +1711,6 @@ namespace HMX.HASSActronQue
 					// Per Zone Controls
 					if (_bPerZoneControls)
 					{
-						MQTT.SendMessage(string.Format("actronque{0}/zone{1}/settemperature/high", unit.Serial, iIndex), unit.Zones[iIndex].SetTemperatureCooling.ToString("N1"));
-						MQTT.SendMessage(string.Format("actronque{0}/zone{1}/settemperature/low", unit.Serial, iIndex), unit.Zones[iIndex].SetTemperatureHeating.ToString("N1"));
-
 						if (!unit.Data.On)
 						{
 							MQTT.SendMessage(string.Format("actronque{0}/zone{1}/mode", unit.Serial, iIndex), "off");
@@ -1748,6 +1745,9 @@ namespace HMX.HASSActronQue
 									break;
 							}
 						}
+
+						MQTT.SendMessage(string.Format("actronque{0}/zone{1}/settemperature/high", unit.Serial, iIndex), unit.Zones[iIndex].SetTemperatureCooling.ToString("N1"));
+						MQTT.SendMessage(string.Format("actronque{0}/zone{1}/settemperature/low", unit.Serial, iIndex), unit.Zones[iIndex].SetTemperatureHeating.ToString("N1"));
 					}
 
 					// Per Zone Sensors
