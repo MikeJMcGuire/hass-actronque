@@ -100,8 +100,12 @@ namespace HMX.HASSActronQue
 		{
 			Logging.WriteDebugLog("MQTT.MessageProcessor() {0}", e.ApplicationMessage.Topic);
 
-			if (_messageHandler != null)
-				_messageHandler.Invoke(e.ApplicationMessage.Topic, ASCIIEncoding.ASCII.GetString(e.ApplicationMessage.PayloadSegment.ToArray()));
+			try
+			{
+				if (_messageHandler != null)
+					_messageHandler.Invoke(e.ApplicationMessage.Topic, Encoding.ASCII.GetString(e.ApplicationMessage.PayloadSegment.ToArray()));
+			}
+			catch { }
 
 			return Task.CompletedTask;
 		}
