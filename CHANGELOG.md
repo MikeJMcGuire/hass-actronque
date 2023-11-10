@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2023.11.0] - 2023-11-10
+
+### Changed
+
+- Updated to support new HVAC/Climate options in HA 2023.9.
+
 ## [v2023.4.0] - 2023-04-30
 
 ### Changed
