@@ -14,29 +14,31 @@
     "armv7",
     "i386"
   ],
-  "options": {
-    "MQTTUser": "",
-    "MQTTPassword": "",
-    "MQTTBroker": "core-mosquitto",
-    "MQTTTLS": false,
-    "PerZoneControls": false,
-    "PerZoneSensors": false,
-    "PollInterval": 30,
-    "QueUser": "queuser",
-    "QuePassword": "quepassword",
-    "SystemType": "que"
-  },
-  "schema": {
-    "MQTTUser": "str?",
-    "MQTTPassword": "str?",
-    "MQTTBroker": "str",
-    "MQTTTLS": "bool?",
-    "PerZoneControls": "bool",
-    "PerZoneSensors": "bool?",
-    "PollInterval": "int(10,300)",
-    "QueUser": "str",
-    "QuePassword": "str",
-    "QueSerial": "str?",
-    "SystemType": "str?"
-  }
+	"options": {
+		"MQTTUser": "",
+		"MQTTPassword": "",
+		"MQTTBroker": "core-mosquitto",
+		"MQTTTLS": false,
+		"PerZoneControls": false,
+		"PerZoneSensors": false,
+		"PollInterval": 30,
+		"QueUser": "queuser",
+		"QuePassword": "quepassword",
+		"SeparateHeatCoolTargets": false,
+		"SystemType": "que"
+	},
+	"schema": {
+		"MQTTUser": "str?",
+		"MQTTPassword": "str?",
+		"MQTTBroker": "str",
+		"MQTTTLS": "bool?",
+		"PerZoneControls": "bool",
+		"PerZoneSensors": "bool?",
+		"PollInterval": "int(10,300)",
+		"QueUser": "str",
+		"QuePassword": "str",
+		"QueSerial": "str?",
+		"SeparateHeatCoolTargets": "bool?",
+		"SystemType": "str?"
+	}
 }

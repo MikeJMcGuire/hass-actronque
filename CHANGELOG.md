@@ -3,9 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [v2023.11.0] - 2023-11-10
 
-### Changed
+### Added
 
-- Updated to support new HVAC/Climate options in HA 2023.9.
+- Added a new configuration option to enable the new HVAC/Climate options in HA 2023.9 (setting the target heating and cooling temperatures independently).
 
 ## [v2023.4.0] - 2023-04-30
 
