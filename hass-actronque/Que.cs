@@ -41,6 +41,7 @@ namespace HMX.HASSActronQue
 		//private static string _strNextEventURL = "";
 		private static bool _bPerZoneControls = false;
 		private static bool _bPerZoneSensors = false;
+		private static bool _bSeparateHeatCool = false;
 		private static bool _bNeoNoEventMode = false;
 		private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
@@ -102,7 +103,7 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, bool bSeparateHeatCool, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 			string strDeviceUniqueIdentifierInput;
@@ -117,6 +118,7 @@ namespace HMX.HASSActronQue
 			_bPerZoneControls = bPerZoneControls;
 			_bPerZoneSensors = bPerZoneSensors;
 			_iPollInterval = iPollInterval;
+			_bSeparateHeatCool = bSeparateHeatCool;
 			_eventStop = eventStop;
 
 			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
