@@ -28,6 +28,14 @@ namespace HMX.HASSActronQue
 			Zone8 = 256
 		}
 
+		[Flags]
+		public enum TemperatureSetType
+		{
+			Default,
+			High,
+			Low
+		}
+
 		private static string _strBaseURLQue = "https://que.actronair.com.au/";
 		private static string _strBaseURLNeo = "https://nimbus.actronair.com.au/";
 		private static string _strSystemType;
@@ -1446,7 +1454,11 @@ namespace HMX.HASSActronQue
 				strAirConditionerName = string.Format("{0} ({1})", _strAirConditionerName, unit.Name);
 				strAirConditionerNameMQTT = string.Format("{0} ({1})", Service.DeviceNameMQTT, unit.Name);
 
-				MQTT.SendMessage(string.Format("homeassistant/climate/actronque{0}/config", strHANameModifier), "{{\"name\":\"{1}\",\"unique_id\":\"{0}-AC\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\",\"auto\"],\"mode_command_topic\":\"actronque{3}/mode/set\",\"temperature_command_topic\":\"actronque{3}/temperature/set\",\"fan_mode_command_topic\":\"actronque{3}/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actronque{3}/fanmode\",\"action_topic\":\"actronque{3}/compressor\",\"temperature_state_topic\":\"actronque{3}/settemperature\",\"mode_state_topic\":\"actronque{3}/mode\",\"current_temperature_topic\":\"actronque{3}/temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial, unit.Name);
+				if (!_bSeparateHeatCool) // Default
+					MQTT.SendMessage(string.Format("homeassistant/climate/actronque{0}/config", strHANameModifier), "{{\"name\":\"{1}\",\"unique_id\":\"{0}-AC\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\",\"auto\"],\"mode_command_topic\":\"actronque{3}/mode/set\",\"temperature_command_topic\":\"actronque{3}/temperature/set\",\"fan_mode_command_topic\":\"actronque{3}/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actronque{3}/fanmode\",\"action_topic\":\"actronque{3}/compressor\",\"temperature_state_topic\":\"actronque{3}/settemperature\",\"mode_state_topic\":\"actronque{3}/mode\",\"current_temperature_topic\":\"actronque{3}/temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial, unit.Name);
+				else
+					MQTT.SendMessage(string.Format("homeassistant/climate/actronque{0}/config", strHANameModifier), "{{\"name\":\"{1}\",\"unique_id\":\"{0}-AC\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"modes\":[\"off\",\"auto\",\"cool\",\"fan_only\",\"heat\"],\"fan_modes\":[\"high\",\"medium\",\"low\",\"auto\"],\"mode_command_topic\":\"actronque{3}/mode/set\",\"temperature_high_command_topic\":\"actronque{3}/temperature/high/set\",\"temperature_low_command_topic\":\"actronque{3}/temperature/low/set\",\"fan_mode_command_topic\":\"actronque{3}/fan/set\",\"min_temp\":\"12\",\"max_temp\":\"30\",\"temp_step\":\"0.5\",\"fan_mode_state_topic\":\"actronque{3}/fanmode\",\"action_topic\":\"actronque{3}/compressor\",\"temperature_high_state_topic\":\"actronque{3}/settemperature/high\",\"temperature_low_state_topic\":\"actronque{3}/settemperature/low\",\"mode_state_topic\":\"actronque{3}/mode\",\"current_temperature_topic\":\"actronque{3}/temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial, unit.Name);
+
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}humidity/config", strHANameModifier), "{{\"name\":\"{1} Humidity\",\"unique_id\":\"{0}-Humidity\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/humidity\",\"unit_of_measurement\":\"%\",\"device_class\":\"humidity\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 
 				if (_strSystemType == "que")
@@ -1597,9 +1609,14 @@ namespace HMX.HASSActronQue
 				{
 					MQTT.SendMessage(string.Format("actronque{0}/mode", unit.Serial), "off");
 					MQTT.SendMessage(string.Format("actronque{0}/settemperature", unit.Serial), GetSetTemperature(unit.Data.SetTemperatureHeating, unit.Data.SetTemperatureCooling).ToString("N1"));
+					MQTT.SendMessage(string.Format("actronque{0}/settemperature/high", unit.Serial), unit.Data.SetTemperatureCooling.ToString("N1"));
+					MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
 				}
 				else
 				{
+					MQTT.SendMessage(string.Format("actronque{0}/settemperature/high", unit.Serial), unit.Data.SetTemperatureCooling.ToString("N1"));
+					MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
+
 					switch (unit.Data.Mode)
 					{
 						case "AUTO":
@@ -1899,65 +1916,57 @@ namespace HMX.HASSActronQue
 			AddCommandToQueue(command);
 		}
 
-		public static void ChangeTemperature(long lRequestId, AirConditionerUnit unit, double dblTemperature, int iZone)
+		public static void ChangeTemperature(long lRequestId, AirConditionerUnit unit, double dblTemperature, int iZone, TemperatureSetType setType)
 		{
+			string strCommandPrefix = "";
 			QueueCommand command = new QueueCommand(lRequestId, unit, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Unit: {1}, Zone: {2}, Temperature: {3}", lRequestId.ToString("X8"), unit.Serial, iZone, dblTemperature);
 
 			if (iZone == 0)
-			{
-				switch (unit.Data.Mode)
-				{
-					case "OFF":
-						return;
-
-					case "FAN":
-						return;
-
-					case "COOL":
-						command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
-
-						break;
-
-					case "HEAT":
-						command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
-
-						break;
-
-					case "AUTO":
-						command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
-						command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
-
-						break;
-				}
-			}
+				strCommandPrefix = "UserAirconSettings";
 			else
+				strCommandPrefix = string.Format("RemoteZoneInfo[{0}]", iZone - 1);
+
+			switch (setType)
 			{
-				switch (unit.Data.Mode)
-				{
-					case "OFF":
-						return;
+				case TemperatureSetType.Default:
+					switch (unit.Data.Mode)
+					{
+						case "OFF":
+							return;
 
-					case "FAN":
-						return;
+						case "FAN":
+							return;
 
-					case "COOL":
-						command.Data.command.Add(string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZone - 1), dblTemperature);
+						case "COOL":
+							command.Data.command.Add(string.Format("{0}.TemperatureSetpoint_Cool_oC", strCommandPrefix), dblTemperature);
 
-						break;
+							break;
 
-					case "HEAT":
-						command.Data.command.Add(string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZone - 1), dblTemperature);
+						case "HEAT":
+							command.Data.command.Add(string.Format("{0}.TemperatureSetpoint_Heat_oC", strCommandPrefix), dblTemperature);
 
-						break;
+							break;
 
-					case "AUTO":
-						command.Data.command.Add(string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Heat_oC", iZone - 1), dblTemperature);
-						command.Data.command.Add(string.Format("RemoteZoneInfo[{0}].TemperatureSetpoint_Cool_oC", iZone - 1), dblTemperature);
+						case "AUTO":
+							command.Data.command.Add(string.Format("{0}.TemperatureSetpoint_Heat_oC", strCommandPrefix), dblTemperature);
+							command.Data.command.Add(string.Format("{0}.TemperatureSetpoint_Cool_oC", strCommandPrefix), dblTemperature);
 
-						break;
-				}
+							break;
+					}
+
+					break;
+
+				case TemperatureSetType.Low:
+					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Heat_oC", dblTemperature);
+
+					break;
+
+				case TemperatureSetType.High:
+					command.Data.command.Add("UserAirconSettings.TemperatureSetpoint_Cool_oC", dblTemperature);
+
+					break;							
 			}
 
 			command.Data.command.Add("type", "set-settings");

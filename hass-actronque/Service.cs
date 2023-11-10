@@ -149,12 +149,28 @@ namespace HMX.HASSActronQue
 			}
 
 			// Per Zone Temperature
-			if (strTopic.StartsWith(strUnitHeader + "/zone") && strTopic.EndsWith("/temperature/set"))
+			if (strTopic.StartsWith(strUnitHeader + "/zone") && strTopic.Contains("/temperature/"))
 			{
 				iZone = int.Parse(strTopic.Substring(strUnitHeader.Length + 5, 1));
 
-				if (double.TryParse(strPayload, out dblTemperature))
-					Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, iZone);
+				// Temperature
+				if (strTopic.EndsWith("/temperature/set"))
+				{
+					if (double.TryParse(strPayload, out dblTemperature))
+						Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, iZone, Que.TemperatureSetType.Default);
+				}
+				// Temperature High
+				else if (strTopic.EndsWith("/high/set"))
+				{
+					if (double.TryParse(strPayload, out dblTemperature))
+						Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, iZone, Que.TemperatureSetType.High);
+				}
+				// Temperature Low
+				else if (strTopic.EndsWith("/low/set"))
+				{
+					if (double.TryParse(strPayload, out dblTemperature))
+						Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, iZone, Que.TemperatureSetType.Low);
+				}
 			}
 			// Per Zone Mode
 			else if (strTopic.StartsWith(strUnitHeader + "/zone") && strTopic.EndsWith("/mode/set"))
@@ -258,10 +274,26 @@ namespace HMX.HASSActronQue
 				}
 			}
 			// Temperature
-			else if (strTopic.StartsWith(strUnitHeader + "/temperature/set"))
+			else if (strTopic.StartsWith(strUnitHeader + "/temperature"))
 			{
-				if (double.TryParse(strPayload, out dblTemperature))
-					Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, 0);
+				// Temperature
+				if (strTopic.EndsWith("/temperature/set"))
+				{
+					if (double.TryParse(strPayload, out dblTemperature))
+						Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, 0, Que.TemperatureSetType.Default);
+				}
+				// Temperature High
+				else if (strTopic.EndsWith("/high/set"))
+				{
+					if (double.TryParse(strPayload, out dblTemperature))
+						Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, 0, Que.TemperatureSetType.High);
+				}
+				// Temperature Low
+				else if (strTopic.EndsWith("/low/set"))
+				{
+					if (double.TryParse(strPayload, out dblTemperature))
+						Que.ChangeTemperature(lRequestId, Que.Units[strUnit], dblTemperature, 0, Que.TemperatureSetType.Low);
+				}
 			}
 		}
     }
