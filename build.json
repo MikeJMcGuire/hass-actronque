@@ -4,7 +4,7 @@
 		"amd64": "7.0-alpine",
 		"aarch64": "7.0-alpine-arm64v8",
 		"armhf": "7.0-alpine-arm32v7",
-		"armv7": "7.0-alpine-arm32v7",
+		"armv7": "7.0-alpine",
 		"i386": "7.0-alpine"
 	},
   "args": {}
