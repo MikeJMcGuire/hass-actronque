@@ -1,6 +1,8 @@
 ARG BUILD_FROM
 
 FROM $BUILD_FROM AS base
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
@@ -17,4 +19,6 @@ RUN dotnet publish hass-actronque.csproj -c Release -o /app
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
+
+RUN apk add --no-cache icu-libs
 ENTRYPOINT ["dotnet", "hass-actronque.dll"]
