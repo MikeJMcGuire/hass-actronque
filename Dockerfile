@@ -1,7 +1,7 @@
 ARG BUILD_FROM
 
 FROM $BUILD_FROM AS base
-RUN apk add --no-cache icu-libs
+RUN apk add --no-cache icu-libs tzdata
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 WORKDIR /app
 
