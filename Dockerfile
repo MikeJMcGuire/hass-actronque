@@ -1,11 +1,11 @@
 ARG BUILD_FROM
 
-FROM mcr.microsoft.com/dotnet/aspnet:$BUILD_FROM AS base
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS base
 RUN apk add --no-cache icu-libs tzdata
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:$BUILD_FROM AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /src
 COPY hass-actronque/hass-actronque.csproj hass-actronque/
 RUN dotnet restore hass-actronque/hass-actronque.csproj
