@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added entities to support the Control All Zones setting on the Actron Que.
+ 
+### Removed
+
+- Removing support for i386 and armhf architectures as they are no longer supported by Microsoft (.NET).
 
 ## [v2023.11.1] - 2023-11-10
 
