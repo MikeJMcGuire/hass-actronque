@@ -1479,6 +1479,8 @@ namespace HMX.HASSActronQue
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}fanpwm/config", strHANameModifier), "{{\"name\":\"{1} Fan PWM\",\"unique_id\":\"{0}-FanPWM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fanpwm\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}fanrpm/config", strHANameModifier), "{{\"name\":\"{1} Fan RPM\",\"unique_id\":\"{0}-FanRPM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fanrpm\",\"unit_of_measurement\":\"RPM\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/switch/actronque{0}/controlallzones/config", strHANameModifier), "{{\"name\":\"Control All Zones\",\"unique_id\":\"{0}-CAZ\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/controlallzones\",\"command_topic\":\"actronque{3}/controlallzones/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+
+					MQTT.Subscribe("actronque{0}/controlallzones/set", unit.Serial);
 				}
 				else
 				{
