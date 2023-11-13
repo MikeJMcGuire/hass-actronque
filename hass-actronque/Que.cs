@@ -2018,7 +2018,7 @@ namespace HMX.HASSActronQue
 
 			AddCommandToQueue(command);
 
-			if (iZone == 0)
+			if (iZone == 0 && !unit.Data.ControlAllZones)
 			{
 				Logging.WriteDebugLog("Que.ChangeTemperature() [0x{0}] Unit: {1}, Setting Control All Zones to True due to Master temperature change", lRequestId.ToString("X8"), unit.Serial);
 
