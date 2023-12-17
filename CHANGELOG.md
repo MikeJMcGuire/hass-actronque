@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added automatic retry when the Que gateway times out on new commands/changes.
+- Added automatic retry when the Que gateway times out on new commands/changes. Any failed command should now be retried 2 - 3 times.
 
 ### Changed
 
