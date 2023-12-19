@@ -2112,7 +2112,7 @@ namespace HMX.HASSActronQue
 		{
 			Logging.WriteDebugLog("Que.SendMQTTFailedCommandAlert() Command failed: {0}", command.RequestId.ToString());
 
-			MQTT.SendMessage(string.Format("actronque{0}/failedcommand", command.Unit.Serial), command.RequestId.ToString());
+			MQTT.SendMessage(string.Format("actronque{0}/lastfailedcommand", command.Unit.Serial), command.RequestId.ToString());
 		}
 
 		private static string GenerateDeviceId()
