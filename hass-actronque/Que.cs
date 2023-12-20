@@ -1453,6 +1453,9 @@ namespace HMX.HASSActronQue
 			{
 				Logging.WriteDebugLog("Que.MQTTRegister() Registering Unit: {0}", unit.Serial);
 
+				// Clear Last Failed Command
+				MQTT.SendMessage(string.Format("actronque{0}/lastfailedcommand", unit.Serial), "");
+
 				if (iDeviceIndex == 0)
 				{
 					strHANameModifier = "";
