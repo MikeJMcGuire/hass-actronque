@@ -1815,7 +1815,7 @@ namespace HMX.HASSActronQue
 
 		private static void AddCommandToQueue(QueueCommand command)
 		{
-			Logging.WriteDebugLog("Que.AddCommandToQueue() [0x{0}]", command.RequestId.ToString("X8"));
+			Logging.WriteDebugLog("Que.AddCommandToQueue() [0x{0}] New Command ID: [0x{1}] ", command.OriginalRequestId.ToString("X8"), command.RequestId.ToString("X8"));
 
 			lock (_oLockQueue)
 			{
@@ -2042,6 +2042,7 @@ namespace HMX.HASSActronQue
 			string strPageURL = "api/v0/client/ac-systems/cmds/send?serial=";
 			bool bRetVal = true;
 
+			Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Original Request ID: 0x{1}", lRequestId.ToString("X8"), command.OriginalRequestId.ToString("X8"));
 			Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, command.Unit.Serial);
 
 			try
