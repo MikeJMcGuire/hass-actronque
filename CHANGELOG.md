@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2024.06.1] - 2024-06-19
+
+Initial commit to my repo
+
 ## [v2023.12.1] - 2023-12-19
 
 ### Added
