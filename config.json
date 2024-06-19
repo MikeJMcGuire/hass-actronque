@@ -6,7 +6,6 @@
   "url": "https://github.com/bongo505/hass-actronque",
   "startup": "application",
   "boot": "auto",
-#  "image": "mikejmcguire/hass-actronque-{arch}",
   "arch": [
     "amd64",
     "aarch64",
