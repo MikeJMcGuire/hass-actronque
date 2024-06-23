@@ -797,9 +797,11 @@ namespace HMX.HASSActronQue
 			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorCapacity", jsonResponse.LiveAircon.CompressorCapacity?.ToString(), ref unit.Data.CompressorCapacity);
 
 			// Compressor Power
-			if (jsonResponse.LiveAircon.ContainsKey("OutdoorUnit"))
+			if (jsonResponse.LiveAircon.ContainsKey("OutdoorUnit")) {
 				ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompPower", jsonResponse.LiveAircon.OutdoorUnit.CompPower?.ToString(), ref unit.Data.CompressorPower);
-
+				if (_strSystemType == "neo")
+					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompRunningPWM", jsonResponse.LiveAircon.OutdoorUnit.CompRunningPWM?.ToString(), ref unit.Data.CompRunningPWM);
+			}
 			// On
 			ProcessPartialStatus(lRequestId, "UserAirconSettings.isOn", jsonResponse.UserAirconSettings.isOn?.ToString(), ref unit.Data.On);
 
@@ -1036,6 +1038,12 @@ namespace HMX.HASSActronQue
 									else if (change.Name == "LiveAircon.OutdoorUnit.CompPower")
 									{
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref unit.Data.CompressorPower);
+										updateItems |= UpdateItems.Main;
+									}
+									// Compressor PWM
+									else if (change.Name == "LiveAircon.OutdoorUnit.CompRunningPWM")
+									{
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref unit.Data.CompRunningPWM);
 										updateItems |= UpdateItems.Main;
 									}
 									// Mode
@@ -1495,6 +1503,10 @@ namespace HMX.HASSActronQue
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}compressorpower/config", strHANameModifier), "");
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}outdoortemperature/config", strHANameModifier), "");
 				}
+				if (_strSystemType == "neo")
+				{
+					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}comprunningpwm/config", strHANameModifier), "{{\"name\":\"{1} Compressor PWM\",\"unique_id\":\"{0}-CompressorPWM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/compressorpwm\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+				}
 
 				foreach (int iZone in unit.Zones.Keys)
 				{
@@ -1719,7 +1731,15 @@ namespace HMX.HASSActronQue
 					// Control All Zones
 					MQTT.SendMessage(string.Format("actronque{0}/controlallzones", unit.Serial), unit.Data.ControlAllZones ? "ON" : "OFF");
 				}
+
+				if (_strSystemType == "neo")
+				{
+					// Compressor PWM
+					MQTT.SendMessage(string.Format("actronque{0}/compressorpwm", unit.Serial), unit.Data.CompRunningPWM.ToString("F0"));
+					
+				}
 			}
+
 
 			// Zones
 			foreach (int iIndex in unit.Zones.Keys)

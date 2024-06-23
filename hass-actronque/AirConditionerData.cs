@@ -18,6 +18,7 @@ namespace HMX.HASSActronQue
 		public string CompressorState; // CompressorMode
 		public double CompressorCapacity; // CompressorCapacity
 		public double CompressorPower; // CompPower
+		public double CompRunningPWM; // Demanded speed from compressor
 		public double CoilInletTemperature; // CoilInlet
 		public double FanPWM; // FanPWM
 		public double FanRPM; // FanRPM
