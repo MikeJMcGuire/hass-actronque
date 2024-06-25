@@ -22,6 +22,8 @@ namespace HMX.HASSActronQue
 		public double CoilInletTemperature; // CoilInlet
 		public double FanPWM; // FanPWM
 		public double FanRPM; // FanRPM
+		public bool OilReturn; // Demanded speed from compressor
+		public double DefrostMode; // Defrost mode
 		public DateTime LastUpdated;
 
 		public AirConditionerData()
