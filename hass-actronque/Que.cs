@@ -796,14 +796,20 @@ namespace HMX.HASSActronQue
 			// Compressor Capacity
 			ProcessPartialStatus(lRequestId, "LiveAircon.CompressorCapacity", jsonResponse.LiveAircon.CompressorCapacity?.ToString(), ref unit.Data.CompressorCapacity);
 
+			if (_strSystemType == "neo") // I don't know if these are available for the que
+			{
+				ProcessPartialStatus(lRequestId, "LiveAircon.Defrost", jsonResponse.LiveAircon.Defrost?.ToString(), ref unit.Data.DefrostStatus); // actual defrost status (see defrostmode below)
+			}
+
+
 			// Compressor Power
 			if (jsonResponse.LiveAircon.ContainsKey("OutdoorUnit")) {
-				ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompPower", jsonResponse.LiveAircon.OutdoorUnit.CompPower?.ToString(), ref unit.Data.CompressorPower);
+				ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompPower", jsonResponse.LiveAircon.OutdoorUnit.CompPower?.ToString(), ref unit.Data.CompressorPower); // note that this is usually zero for neo
 				if (_strSystemType == "neo") // I don't know if these are available for the que
 				{
-					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompRunningPWM", jsonResponse.LiveAircon.OutdoorUnit.CompRunningPWM?.ToString(), ref unit.Data.CompRunningPWM);
-					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.OilReturn", jsonResponse.LiveAircon.OutdoorUnit.OilReturn?.ToString(), ref unit.Data.OilReturn);
-					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.DefrostMode", jsonResponse.LiveAircon.OutdoorUnit.DefrostMode?.ToString(), ref unit.Data.DefrostMode);
+					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.CompRunningPWM", jsonResponse.LiveAircon.OutdoorUnit.CompRunningPWM?.ToString(), ref unit.Data.CompRunningPWM); // indication of actual compressor running speed
+					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.OilReturn", jsonResponse.LiveAircon.OutdoorUnit.OilReturn?.ToString(), ref unit.Data.OilReturn); // whether the oil return has been activated - usually shuts down the compressor until oil has returned
+					ProcessPartialStatus(lRequestId, "LiveAircon.OutdoorUnit.DefrostMode", jsonResponse.LiveAircon.OutdoorUnit.DefrostMode?.ToString(), ref unit.Data.DefrostMode); // I thought this indicated defrost mode, but it doesn't appear to
 				}
 			}
 			// On
@@ -1054,6 +1060,12 @@ namespace HMX.HASSActronQue
 									else if (change.Name == "LiveAircon.OutdoorUnit.OilReturn")
 									{
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref unit.Data.OilReturn);
+										updateItems |= UpdateItems.Main;
+									}
+									// Compressor Defrost Status
+									else if (change.Name == "LiveAircon.Defrost")
+									{
+										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref unit.Data.DefrostStatus);
 										updateItems |= UpdateItems.Main;
 									}
 									// Compressor Defrost Mode
@@ -1526,6 +1538,7 @@ namespace HMX.HASSActronQue
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}compressorcapacity/config", strHANameModifier), "{{\"name\":\"{1} Compressor Capacity\",\"unique_id\":\"{0}-CompressorCapacity\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/compressorcapacity\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}outdoortemperature/config", strHANameModifier), "{{\"name\":\"{1} Outdoor Temperature\",\"unique_id\":\"{0}-OutdoorTemperature\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/outdoortemperature\",\"unit_of_measurement\":\"\u00B0C\",\"device_class\":\"temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}comprunningpwm/config", strHANameModifier), "{{\"name\":\"{1} Compressor PWM\",\"unique_id\":\"{0}-CompressorPWM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/compressorpwm\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}defrost/config", strHANameModifier), "{{\"name\":\"{1} Defrost\",\"unique_id\":\"{0}-Defrost\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/defrost\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}defrostmode/config", strHANameModifier), "{{\"name\":\"{1} Defrost Mode\",\"unique_id\":\"{0}-DefrostMode\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/defrostmode\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}oilreturn/config", strHANameModifier), "{{\"name\":\"{1} Compressor Oil Return\",\"unique_id\":\"{0}-OilReturn\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/oilreturn\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}coilinlettemperature/config", strHANameModifier), "{{\"name\":\"{1} Coil Inlet Temperature\",\"unique_id\":\"{0}-CoilInletTemperature\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/coilinlettemperature\",\"unit_of_measurement\":\"\u00B0C\",\"device_class\":\"temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
@@ -1772,6 +1785,9 @@ namespace HMX.HASSActronQue
 
 					// Defrost Mode
 					MQTT.SendMessage(string.Format("actronque{0}/defrostmode", unit.Serial), unit.Data.DefrostMode.ToString("F0"));
+
+					// Defrost Status
+					MQTT.SendMessage(string.Format("actronque{0}/defrost", unit.Serial), unit.Data.DefrostStatus ? "ON" : "OFF");
 
 					// Oil Return
 					MQTT.SendMessage(string.Format("actronque{0}/oilreturn", unit.Serial), unit.Data.OilReturn ? "ON" : "OFF");
