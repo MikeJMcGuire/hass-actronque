@@ -25,6 +25,8 @@ namespace HMX.HASSActronQue
 		public bool OilReturn; // Demanded speed from compressor
 		public double DefrostMode; // Defrost mode
 		public bool DefrostStatus; // Defrost mode
+		public bool DefrostAlert; // Defrost alert
+		public bool CleanFilterAlert; // Clean filter alert
 		public DateTime LastUpdated;
 
 		public AirConditionerData()
