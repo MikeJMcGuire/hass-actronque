@@ -595,6 +595,10 @@ namespace HMX.HASSActronQue
 
 			_iZoneCount = 0;
 
+			AirConditionerPeripheral peripheral;
+
+			_iPerCount = 0;
+
 			foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 			{
 				Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
@@ -667,6 +671,55 @@ namespace HMX.HASSActronQue
 						}
 						else
 							Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded - No Data. Retrying.", lRequestId.ToString("X8"));
+
+						// Peripherals - neo only
+						if ((_strSystemType == "neo") && (jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("AirconSystem") && jsonResponse.lastKnownState.AirconSystem.ContainsKey("Peripherals")))
+						{
+							for (int iPerIndex = 0; iPerIndex < jsonResponse.lastKnownState.AirconSystem.Peripherals.Count; iPerIndex++)
+							{
+								peripheral = new AirConditionerPeripheral();
+								peripheral.LogicalAddress = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].LogicalAddress;
+								peripheral.Serial = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].SerialNumber;
+								if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].LogicalAddress.ToString() == "Zone Sensor")
+								{
+
+									peripheral.ZoneSensor = true;
+
+									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} is a zone sensor", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
+
+									if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ContainsKey("ZoneAssignment"))
+									{
+										int perZoneCount = 0; // count the number of zones
+										JArray aZoneAssignments = jsonResponse.AirconSystem.Peripherals[iPerIndex].ZoneAssignments;
+										foreach (JProperty zoneAsst in aZoneAssignments)
+										{
+											perZoneCount++; // increment the count as we have at least one
+//											peripheral.ZoneAssignments.Add(perZoneCount + 1, zoneAsst.Value<int>()); // add the zone to the list - don't need as using names
+											if (perZoneCount == 1) // there's only one location so far, so put it there
+											{
+												peripheral.Location = unit.Zones[zoneAsst.Value<int>()].Name;
+											} else { // there's already one location, so add the new one with and
+												peripheral.Location = peripheral.Location + " and " + unit.Zones[zoneAsst.Value<int>()].Name;
+											}
+
+											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} has name {3}", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, peripheral.Location);
+										}
+									} else {
+										peripheral.ZoneAssignments.Add(1, 0); // we don't have any assignments, so set to zero
+									}
+								} else {
+									// the peripheral isn't a zone sensor
+									peripheral.ZoneSensor = false;
+
+									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} not a zone sensor", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
+								}
+								unit.Peripherals.Add(peripheral.Serial, peripheral);
+								_iPerCount++;
+							}
+						}
+						else
+							Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded - No Peripheral Data. Retrying.", lRequestId.ToString("X8"));
+
 					}
 					else
 					{
@@ -748,53 +801,6 @@ namespace HMX.HASSActronQue
 
 						jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
-						// Zones
-						if (jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("AirconSystem") && jsonResponse.lastKnownState.AirconSystem.ContainsKey("Peripherals"))
-						{
-							for (int iPerIndex = 0; iPerIndex < jsonResponse.lastKnownState.AirconSystem.Peripherals.Count; iPerIndex++)
-							{
-								peripheral = new AirConditionerPeripheral();
-								peripheral.LogicalAddress = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].LogicalAddress;
-								peripheral.Serial = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].SerialNumber;
-								if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].LogicalAddress.ToString() == "Zone Sensor")
-								{
-
-									peripheral.ZoneSensor = true;
-
-									Logging.WriteDebugLog("Que.GetAirConditionerPeripherals() [0x{0}] Peripheral: {1} - {2} is a zone sensor", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
-
-									if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ContainsKey("ZoneAssignment"))
-									{
-										int perZoneCount = 0; // count the number of zones
-										JArray aZoneAssignments = jsonResponse.AirconSystem.Peripherals[iPerIndex].ZoneAssignments;
-										foreach (JProperty zoneAsst in aZoneAssignments)
-										{
-											perZoneCount++; // increment the count as we have at least one
-//											peripheral.ZoneAssignments.Add(perZoneCount + 1, zoneAsst.Value<int>()); // add the zone to the list - don't need as using names
-											if (perZoneCount == 1) // there's only one location so far, so put it there
-											{
-												peripheral.Location = unit.Zones[zoneAsst.Value<int>()].Name;
-											} else { // there's already one location, so add the new one with and
-												peripheral.Location = peripheral.Location + " and " + unit.Zones[zoneAsst.Value<int>()].Name;
-											}
-
-											Logging.WriteDebugLog("Que.GetAirConditionerPeripherals() [0x{0}] Peripheral: {1} - {2} has name {3}", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, peripheral.Location);
-										}
-									} else {
-										peripheral.ZoneAssignments.Add(1, 0); // we don't have any assignments, so set to zero
-									}
-								} else {
-									// the peripheral isn't a zone sensor
-									peripheral.ZoneSensor = false;
-
-									Logging.WriteDebugLog("Que.GetAirConditionerPeripherals() [0x{0}] Peripheral: {1} - {2} not a zone sensor", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
-								}
-								unit.Peripherals.Add(peripheral.Serial, peripheral);
-								_iPerCount++;
-							}
-						}
-						else
-							Logging.WriteDebugLog("Que.GetAirConditionerPeripherals() [0x{0}] Responded - No Data. Retrying.", lRequestId.ToString("X8"));
 					}
 					else
 					{
@@ -1477,14 +1483,14 @@ namespace HMX.HASSActronQue
 								MQTTRegister();
 						}
 
-						if ((_strSystemType == "neo") && (_iPerCount == 0)) // only run this if we are a neo - que stores batteries with the sensor
+/*						if ((_strSystemType == "neo") && (_iPerCount == 0)) // only run this if we are a neo - que stores batteries with the sensor
 						{
 							if (!await GetAirConditionerPeripherals())
 								continue;
 							else
 								MQTTRegister();
 						}
-
+*/
 
 						// Normal Mode
 						if (!_bNeoNoEventMode)
