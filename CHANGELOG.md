@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2024.7.0] - 2024-07-19
+
+### Changed
+
+- Upgraded MQTT and JSON packages.
+
 ## [v2023.12.1] - 2023-12-19
 
 ### Added
