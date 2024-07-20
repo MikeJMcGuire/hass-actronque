@@ -1046,11 +1046,15 @@ namespace HMX.HASSActronQue
 
 			if (_strSystemType == "neo") // I don't know if que uses peripherals
 			{
+				Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Allocating JArray", lRequestId.ToString("X8"), unit.Serial);
 				JArray aPeripherals = jsonResponse.AirconSystem.Peripherals;
+				Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Starting foreach", lRequestId.ToString("X8"), unit.Serial);
 				foreach (JProperty peripheral in aPeripherals.Cast<JProperty>()) // step through the peripherals
 				{
+					Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Checking Serial Key", lRequestId.ToString("X8"), unit.Serial);
 					if (unit.Peripherals.ContainsKey((string)peripheral["SerialNumber"]))
 					{
+					  Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Checking ZoneSensor", lRequestId.ToString("X8"), unit.Serial);
 						if (unit.Peripherals[(string)peripheral["SerialNumber"]].ZoneSensor == true) // if the peripheral is a zone sensor, then get the battery
 							unit.Peripherals[(string)peripheral["SerialNumber"]].Battery = (double)peripheral["RemainingBatteryCapacity_pc"];
 					}
