@@ -2079,11 +2079,14 @@ namespace HMX.HASSActronQue
 
 			if (_strSystemType == "neo") // neo does batteries as peripherals
 			{
+				Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Peripherals: {1}", unit.Serial, unit.Peripherals.Count);
 				if (unit.Peripherals.Count > 0)
 				{
 					foreach (string serialNum in unit.Peripherals.Keys)
 					{
+						Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Peripheral Serial: {1} ZS: {2}", unit.Serial, serialNum, unit.Peripherals[serialNum].ZoneSensor);
 						if (unit.Peripherals[serialNum].ZoneSensor == true) // only send data for zone sensors - there may be other peripheral types
+							Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Peripheral Serial: {1} Batt: {2}", unit.Serial, serialNum, unit.Peripherals[serialNum].Battery.ToString("N0"));
 							MQTT.SendMessage(string.Format("actronque{0}/sensor{1}/battery", unit.Serial, serialNum), unit.Peripherals[serialNum].Battery.ToString("N0"));
 					}
 				}
