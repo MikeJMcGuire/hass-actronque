@@ -680,7 +680,7 @@ namespace HMX.HASSActronQue
 								peripheral = new AirConditionerPeripheral();
 								peripheral.LogicalAddress = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].LogicalAddress;
 								peripheral.Serial = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].SerialNumber;
-								if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].LogicalAddress.ToString() == "Zone Sensor")
+								if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].DeviceType.ToString() == "Zone Sensor")
 								{
 
 									peripheral.ZoneSensor = true;
