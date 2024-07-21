@@ -1049,14 +1049,14 @@ namespace HMX.HASSActronQue
 				Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Allocating JArray", lRequestId.ToString("X8"), unit.Serial);
 				JArray aPeripherals = jsonResponse.AirconSystem.Peripherals;
 				Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Starting foreach", lRequestId.ToString("X8"), unit.Serial);
-				foreach (JProperty peripheral in aPeripherals.Cast<JProperty>()) // step through the peripherals
+				foreach (JObject peripheral in aPeripherals) // step through the peripherals
 				{
 					Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Checking Serial Key", lRequestId.ToString("X8"), unit.Serial);
-					if (unit.Peripherals.ContainsKey((string)peripheral["SerialNumber"]))
+					if (unit.Peripherals.ContainsKey(peripheral.GetValue("SerialNumber").ToString()))
 					{
 					  Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Checking ZoneSensor", lRequestId.ToString("X8"), unit.Serial);
-						if (unit.Peripherals[(string)peripheral["SerialNumber"]].ZoneSensor == true) // if the peripheral is a zone sensor, then get the battery
-							unit.Peripherals[(string)peripheral["SerialNumber"]].Battery = (double)peripheral["RemainingBatteryCapacity_pc"];
+						if (unit.Peripherals[peripheral.GetValue("SerialNumber").ToString()].ZoneSensor == true) // if the peripheral is a zone sensor, then get the battery
+							unit.Peripherals[peripheral.GetValue("SerialNumber").ToString()].Battery = (double)peripheral.GetValue("RemainingBatteryCapacity_pc");
 					}
 				}
 			}
