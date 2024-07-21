@@ -685,11 +685,8 @@ namespace HMX.HASSActronQue
 
 									peripheral.ZoneSensor = true;
 
-									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} is a zone sensor", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
-
 									if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ContainsKey("ZoneAssignment"))
 									{
-										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} includes Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
 										int perZoneCount = 0; // count the number of zones
 										JArray aZoneAssignments = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ZoneAssignment;
 										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} has {2} Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments.Count);
@@ -704,8 +701,8 @@ namespace HMX.HASSActronQue
 												peripheral.Location = peripheral.Location + " and " + unit.Zones[(int)aZoneAssignments[counter]].Name;
 											}
 
-											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} has name {3}", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, peripheral.Location);
 										}
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} has name {3}", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, peripheral.Location);
 									} else {
 										peripheral.ZoneAssignments.Add(1, 0); // we don't have any assignments, so set to zero
 									}
@@ -968,15 +965,11 @@ namespace HMX.HASSActronQue
 
 			if (_strSystemType == "neo") // I don't know if que uses peripherals
 			{
-				Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Allocating JArray", lRequestId.ToString("X8"), unit.Serial);
 				JArray aPeripherals = jsonResponse.AirconSystem.Peripherals;
-				Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Starting foreach", lRequestId.ToString("X8"), unit.Serial);
 				foreach (JObject peripheral in aPeripherals) // step through the peripherals
 				{
-					Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Checking Serial Key", lRequestId.ToString("X8"), unit.Serial);
 					if (unit.Peripherals.ContainsKey(peripheral.GetValue("SerialNumber").ToString()))
 					{
-					  Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1} Checking ZoneSensor", lRequestId.ToString("X8"), unit.Serial);
 						if (unit.Peripherals[peripheral.GetValue("SerialNumber").ToString()].ZoneSensor == true) // if the peripheral is a zone sensor, then get the battery
 							unit.Peripherals[peripheral.GetValue("SerialNumber").ToString()].Battery = (double)peripheral.GetValue("RemainingBatteryCapacity_pc");
 					}
@@ -1712,20 +1705,17 @@ namespace HMX.HASSActronQue
 
 				if (_strSystemType == "neo") // neo does sensors as peripherals
 				{
-					Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Checking peripherals", unit.Serial);
 					if (unit.Peripherals.Count() > 0)
 					{
 						Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral count {1}", unit.Serial, unit.Peripherals.Count());
 						foreach (string serialNum in unit.Peripherals.Keys)
 						{
-							Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral serial {1}", unit.Serial, serialNum);
+							Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral serial {1}, Zone sensor {2}", unit.Serial, serialNum, unit.Peripherals[serialNum].ZoneSensor);
 							if (unit.Peripherals[serialNum].ZoneSensor == true) // only set up a sensor for zone sensors - there may be other peripheral types
-								Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral serial {1} is a zone sensor", unit.Serial, serialNum);
 								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/sensor{1}battery/config", strHANameModifier, serialNum), "{{\"name\":\"Sensor {5} {1} {0} Battery\",\"unique_id\":\"{2}-s{1}battery\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{5}/sensor{1}/battery\",\"state_class\":\"measurement\",\"unit_of_measurement\":\"%\",\"device_class\":\"battery\",\"availability_topic\":\"{2}/status\"}}", unit.Peripherals[serialNum].Location, serialNum, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 						}
 					}
 				}
-
 
 				MQTT.Subscribe("actronque{0}/mode/set", unit.Serial);
 				MQTT.Subscribe("actronque{0}/fan/set", unit.Serial);
@@ -1997,10 +1987,13 @@ namespace HMX.HASSActronQue
 				{
 					foreach (string serialNum in unit.Peripherals.Keys)
 					{
-						Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Peripheral Serial: {1} ZS: {2}", unit.Serial, serialNum, unit.Peripherals[serialNum].ZoneSensor);
 						if (unit.Peripherals[serialNum].ZoneSensor == true) // only send data for zone sensors - there may be other peripheral types
+						{
 							Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Peripheral Serial: {1} Batt: {2}", unit.Serial, serialNum, unit.Peripherals[serialNum].Battery.ToString("N0"));
 							MQTT.SendMessage(string.Format("actronque{0}/sensor{1}/battery", unit.Serial, serialNum), unit.Peripherals[serialNum].Battery.ToString("N0"));
+						} else {
+							Logging.WriteDebugLog("Que.MQTTUpdateData() Unit: {0}, Peripheral Serial: {1} is not a zone sensor", unit.Serial, serialNum, unit.Peripherals[serialNum].Battery.ToString("N0"));
+						}
 					}
 				}
 			}
