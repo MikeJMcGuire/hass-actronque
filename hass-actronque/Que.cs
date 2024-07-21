@@ -689,14 +689,14 @@ namespace HMX.HASSActronQue
 
 									if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ContainsKey("ZoneAssignment"))
 									{
-										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {2} includes Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} includes Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
 										int perZoneCount = 0; // count the number of zones
-										JArray aZoneAssignments = jsonResponse.AirconSystem.Peripherals[iPerIndex].ZoneAssignments;
-										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {2} has {3} Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments.Count);
+										JArray aZoneAssignments = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ZoneAssignments;
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} has {2} Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments.Count);
 										for (int counter = 0; counter < aZoneAssignments.Count; counter++)
 										{
 											perZoneCount++; // increment the count as we have at least one
-											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {2} has Zone {3} Assigned", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments[counter]);
+											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} has Zone {2} Assigned", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments[counter]);
 											if (perZoneCount == 1) // there's only one location so far, so put it there
 											{
 												peripheral.Location = unit.Zones[(int)aZoneAssignments[counter]].Name;
