@@ -689,17 +689,19 @@ namespace HMX.HASSActronQue
 
 									if (jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ContainsKey("ZoneAssignment"))
 									{
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {2} includes Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
 										int perZoneCount = 0; // count the number of zones
 										JArray aZoneAssignments = jsonResponse.AirconSystem.Peripherals[iPerIndex].ZoneAssignments;
-										foreach (JProperty zoneAsst in aZoneAssignments)
+										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {2} has {3} Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments.Count);
+										for (int counter = 0; counter < aZoneAssignments.Count; counter++)
 										{
 											perZoneCount++; // increment the count as we have at least one
-//											peripheral.ZoneAssignments.Add(perZoneCount + 1, zoneAsst.Value<int>()); // add the zone to the list - don't need as using names
+											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {2} has Zone {3} Assigned", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments[counter]);
 											if (perZoneCount == 1) // there's only one location so far, so put it there
 											{
-												peripheral.Location = unit.Zones[zoneAsst.Value<int>()].Name;
+												peripheral.Location = unit.Zones[(int)aZoneAssignments[counter]].Name;
 											} else { // there's already one location, so add the new one with and
-												peripheral.Location = peripheral.Location + " and " + unit.Zones[zoneAsst.Value<int>()].Name;
+												peripheral.Location = peripheral.Location + " and " + unit.Zones[(int)aZoneAssignments[counter]].Name;
 											}
 
 											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2} has name {3}", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, peripheral.Location);
@@ -749,87 +751,6 @@ namespace HMX.HASSActronQue
 						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
 					else
 						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
-
-					bRetVal = false;
-					goto Cleanup;
-				}
-
-			Cleanup:
-				cancellationToken?.Dispose();
-				httpResponse?.Dispose();
-			}
-
-			return bRetVal;
-		}
-
-		private async static Task<bool> GetAirConditionerPeripherals()
-		{
-			HttpResponseMessage httpResponse = null;
-			CancellationTokenSource cancellationToken = null;
-			long lRequestId = RequestManager.GetRequestId();
-			string strPageURL = "api/v0/client/ac-systems/status/latest?serial=";
-			string strResponse;
-			dynamic jsonResponse;
-			bool bRetVal = true;
-			//Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
-			AirConditionerPeripheral peripheral;
-
-			_iPerCount = 0;
-
-			foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
-			{
-				Logging.WriteDebugLog("Que.GetAirConditionerPeripherals() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
-
-				if (!IsTokenValid())
-				{
-					bRetVal = false;
-					goto Cleanup;
-				}
-
-				try
-				{
-					cancellationToken = new CancellationTokenSource();
-					cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
-
-					httpResponse = await _httpClient.GetAsync(strPageURL + unit.Serial, cancellationToken.Token);
-
-					if (httpResponse.IsSuccessStatusCode)
-					{
-						strResponse = await httpResponse.Content.ReadAsStringAsync();
-
-						Logging.WriteDebugLog("Que.GetAirConditionerPeripherals() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
-
-						jsonResponse = JsonConvert.DeserializeObject(strResponse);
-
-					}
-					else
-					{
-						if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-						{
-							Logging.WriteDebugLogError("Que.GetAirConditionerPeripherals()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
-
-							_eventAuthenticationFailure.Set();
-						}
-						else
-							Logging.WriteDebugLogError("Que.GetAirConditionerPeripherals()", lRequestId, "Unable to process API response: {0}/{1}. Is the serial number correct?", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
-
-						bRetVal = false;
-						goto Cleanup;
-					}
-				}
-				catch (OperationCanceledException eException)
-				{
-					Logging.WriteDebugLogError("Que.GetAirConditionerPeripherals()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
-
-					bRetVal = false;
-					goto Cleanup;
-				}
-				catch (Exception eException)
-				{
-					if (eException.InnerException != null)
-						Logging.WriteDebugLogError("Que.GetAirConditionerPeripherals()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
-					else
-						Logging.WriteDebugLogError("Que.GetAirConditionerPeripherals()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
 
 					bRetVal = false;
 					goto Cleanup;
@@ -1486,15 +1407,6 @@ namespace HMX.HASSActronQue
 							else
 								MQTTRegister();
 						}
-
-/*						if ((_strSystemType == "neo") && (_iPerCount == 0)) // only run this if we are a neo - que stores batteries with the sensor
-						{
-							if (!await GetAirConditionerPeripherals())
-								continue;
-							else
-								MQTTRegister();
-						}
-*/
 
 						// Normal Mode
 						if (!_bNeoNoEventMode)
