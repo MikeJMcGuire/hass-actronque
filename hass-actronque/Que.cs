@@ -691,7 +691,7 @@ namespace HMX.HASSActronQue
 									{
 										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} includes Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress);
 										int perZoneCount = 0; // count the number of zones
-										JArray aZoneAssignments = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ZoneAssignments;
+										JArray aZoneAssignments = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPerIndex].ZoneAssignment;
 										Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] LogAddr: {1} has {2} Zone Assignments", lRequestId.ToString("X8"), iPerIndex + 1, peripheral.LogicalAddress, aZoneAssignments.Count);
 										for (int counter = 0; counter < aZoneAssignments.Count; counter++)
 										{
