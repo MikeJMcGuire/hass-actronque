@@ -1799,11 +1799,15 @@ namespace HMX.HASSActronQue
 
 				if (_strSystemType == "neo") // neo does sensors as peripherals
 				{
+					Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Checking peripherals", unit.Serial);
 					if (unit.Peripherals.Count() > 0)
 					{
+						Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral count {1}", unit.Serial, unit.Peripherals.Count());
 						foreach (string serialNum in unit.Peripherals.Keys)
 						{
+							Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral serial {1}", unit.Serial, serialNum);
 							if (unit.Peripherals[serialNum].ZoneSensor == true) // only set up a sensor for zone sensors - there may be other peripheral types
+								Logging.WriteDebugLog("Que.MQTTRegister() Unit: {0} Peripheral serial {1} is a zone sensor", unit.Serial, serialNum);
 								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/sensor{1}battery/config", strHANameModifier, serialNum), "{{\"name\":\"Sensor {1} {0} Battery\",\"unique_id\":\"{2}-s{1}battery\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{5}/sensor{1}/battery\",\"state_class\":\"measurement\",\"unit_of_measurement\":\"%\",\"device_class\":\"battery\",\"availability_topic\":\"{2}/status\"}}", unit.Peripherals[serialNum].Location, serialNum, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 						}
 					}
