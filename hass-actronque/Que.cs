@@ -1679,7 +1679,7 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
 
 				// Compressor
-				if (unit.Data.CompressorPower > 0)
+				if (unit.Data.CompressorCapacity > 0)
 				{
 					switch (unit.Data.CompressorState)
 					{
