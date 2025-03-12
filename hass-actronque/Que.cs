@@ -1679,32 +1679,42 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
 
 				// Compressor
-				switch (unit.Data.CompressorState)
+				if (unit.Data.CompressorPower > 0)
 				{
-					case "HEAT":
-						MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "heating");
-						break;
+					switch (unit.Data.CompressorState)
+					{
+						case "HEAT":
+							MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "heating");
+							break;
 
-					case "COOL":
-						MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "cooling");
-						break;
+						case "COOL":
+							MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "cooling");
+							break;
 
-					case "OFF":
-						MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "off");
-						break;
-
-					case "IDLE":
-						if (unit.Data.On)
-							MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "idle");
-						else
+						case "OFF":
 							MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "off");
+							break;
 
-						break;
+						case "IDLE":
+							if (unit.Data.On)
+								MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "idle");
+							else
+								MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "off");
 
-					default:
-						Logging.WriteDebugLog("Que.MQTTUpdateData() Unexpected Compressor State: {0}", unit.Data.CompressorState);
+							break;
 
-						break;
+						default:
+							Logging.WriteDebugLog("Que.MQTTUpdateData() Unexpected Compressor State: {0}", unit.Data.CompressorState);
+
+							break;
+					}
+				}
+				else
+				{
+					if (unit.Data.On)
+						MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "idle");
+					else
+						MQTT.SendMessage(string.Format("actronque{0}/compressor", unit.Serial), "off");
 				}
 
 				if (_strSystemType == "que")
