@@ -22,6 +22,7 @@
 		"PerZoneSensors": false,
 		"PollInterval": 30,
 		"QueUser": "queuser",
+		"QueLogs": true,
 		"QuePassword": "quepassword",
 		"SeparateHeatCoolTargets": false,
 		"SystemType": "que"
@@ -36,6 +37,7 @@
 		"PerZoneSensors": "bool?",
 		"PollInterval": "int(10,300)",
 		"QueUser": "str",
+		"QueLogs": "bool?",
 		"QuePassword": "str",
 		"QueSerial": "str?",
 		"SeparateHeatCoolTargets": "bool?",

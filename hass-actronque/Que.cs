@@ -51,6 +51,7 @@ namespace HMX.HASSActronQue
 		private static bool _bPerZoneSensors = false;
 		private static bool _bSeparateHeatCool = false;
 		private static bool _bNeoNoEventMode = false;
+		private static bool _bQueLogging = true;
 		private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClient = null, _httpClientAuth = null, _httpClientCommands = null;
@@ -111,7 +112,7 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bPerZoneControls, bool bPerZoneSensors, bool bSeparateHeatCool, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bPerZoneSensors, bool bSeparateHeatCool, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 			string strDeviceUniqueIdentifierInput;
@@ -123,6 +124,7 @@ namespace HMX.HASSActronQue
 			_strQuePassword = strQuePassword;
 			_strSerialNumber = strSerialNumber;
 			_strSystemType = strSystemType;
+			_bQueLogging = bQueLogs;
 			_bPerZoneControls = bPerZoneControls;
 			_bPerZoneSensors = bPerZoneSensors;
 			_iPollInterval = iPollInterval;
@@ -893,7 +895,8 @@ namespace HMX.HASSActronQue
 		{
 			double dblTemp = 0.0;
 
-			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
+			if (_bQueLogging) 
+				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
 
 			if (!double.TryParse(strValue ?? "", out dblTemp))
 				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
@@ -908,7 +911,8 @@ namespace HMX.HASSActronQue
 
 		private static void ProcessPartialStatus(long lRequestId, string strName, string strValue, ref string strTarget)
 		{
-			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
+			if (_bQueLogging) 
+				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
 
 			if ((strValue ?? "") == "")
 				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
@@ -925,7 +929,8 @@ namespace HMX.HASSActronQue
 		{
 			bool bTemp;
 
-			Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
+			if (_bQueLogging)
+				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Change: {1}", lRequestId.ToString("X8"), strName);
 
 			if (!bool.TryParse(strValue ?? "", out bTemp))
 				Logging.WriteDebugLog("Que.ProcessPartialStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), strName);
