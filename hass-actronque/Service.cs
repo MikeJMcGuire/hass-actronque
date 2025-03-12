@@ -37,7 +37,7 @@ namespace HMX.HASSActronQue
 			string strMQTTUser, strMQTTPassword, strMQTTBroker;
 			string strQueUser, strQuePassword, strQueSerial, strSystemType;
 			int iPollInterval;
-			bool bPerZoneControls, bPerZoneSensors, bMQTTLogging, bMQTTTLS, bSeparateHeatCool;
+			bool bPerZoneControls, bPerZoneSensors, bMQTTLogging = true, bMQTTTLS, bSeparateHeatCool;
 
 			Logging.WriteDebugLog("Service.Start() Build Date: {0}", Properties.Resources.BuildDate);
 

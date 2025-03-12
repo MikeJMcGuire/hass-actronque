@@ -11,6 +11,9 @@ Home Assistant AddOn Repository: https://github.com/MikeJMcGuire/HASSAddons.
 ### MQTTBroker: string
 Set this field to core-mosquitto to use the HA Mosquitto MQTT add-on. Otherwise, specify a host or host:port for an alternative MQTT server.
 
+### MQTTLogs: true/false
+Setting this option to false will reduce the amount of MQTT logging.
+
 ### MQTTTLS: true/false
 Setting this option to true will force the MQTT client to attempt a TLS connection to the MQTT broker.
 
