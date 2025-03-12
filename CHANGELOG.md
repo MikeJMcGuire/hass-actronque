@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 - Added additional sensor entity for the air conditioner current temperature.
 - Added configuration option to reduce MQTT logging.
+- Added additional sensor entity for the air conditioner current temperature.
 
 ### Changed
 
