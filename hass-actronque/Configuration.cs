@@ -20,7 +20,7 @@ namespace HMX.HASSActronQue
 
 		public static bool GetOptionalConfiguration(IConfigurationRoot configuration, string strVariable, out bool bConfiguration, bool bDefault)
 		{
-			return GetConfiguration(configuration, strVariable, out bConfiguration, false, true);
+			return GetConfiguration(configuration, strVariable, out bConfiguration, false, true, bDefault);
 		}
 
 		public static bool GetPrivateConfiguration(IConfigurationRoot configuration, string strVariable, out bool bConfiguration)
