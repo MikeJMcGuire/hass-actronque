@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2025.3.0] - 2025-03-12
+
+### Added
+
+- Added additional sensor entity for the air conditioner current temperature.
+- Added configuration option to reduce MQTT logging.
+
+### Changed
+
+- Migrated from .NET 8.0 to .NET 9.0.
+
 ## [v2024.7.0] - 2024-07-19
 
 ### Changed

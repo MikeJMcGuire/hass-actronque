@@ -37,7 +37,7 @@ namespace HMX.HASSActronQue
 			string strMQTTUser, strMQTTPassword, strMQTTBroker;
 			string strQueUser, strQuePassword, strQueSerial, strSystemType;
 			int iPollInterval;
-			bool bPerZoneControls, bPerZoneSensors, bMQTTTLS, bSeparateHeatCool;
+			bool bPerZoneControls, bPerZoneSensors, bMQTTLogging, bMQTTTLS, bSeparateHeatCool;
 
 			Logging.WriteDebugLog("Service.Start() Build Date: {0}", Properties.Resources.BuildDate);
 
@@ -63,6 +63,7 @@ namespace HMX.HASSActronQue
 			Configuration.GetPrivateOptionalConfiguration(configuration, "MQTTPassword", out strMQTTPassword);
 			if (!Configuration.GetConfiguration(configuration, "MQTTBroker", out strMQTTBroker))
 				return;
+			Configuration.GetOptionalConfiguration(configuration, "MQTTLogs", out bMQTTLogging);
 			Configuration.GetOptionalConfiguration(configuration, "MQTTTLS", out bMQTTTLS);
 
 			if (!Configuration.GetConfiguration(configuration, "PerZoneControls", out bPerZoneControls))
@@ -113,7 +114,7 @@ namespace HMX.HASSActronQue
 				return;
 			}
 
-			MQTT.StartMQTT(strMQTTBroker, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
+			MQTT.StartMQTT(strMQTTBroker, bMQTTLogging, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
 			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bPerZoneControls, bPerZoneSensors, bSeparateHeatCool, _eventStop);
 
