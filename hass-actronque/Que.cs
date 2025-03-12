@@ -1822,7 +1822,7 @@ namespace HMX.HASSActronQue
 						if (_strSystemType == "que")
 						{
 							// Compressor
-							if (unit.Zones[iIndex].Position > 0)
+							if (unit.Data.CompressorCapacity > 0 && unit.Zones[iIndex].Position > 0)
 							{
 								switch (unit.Data.CompressorState)
 								{
