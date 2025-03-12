@@ -1009,7 +1009,8 @@ namespace HMX.HASSActronQue
 
 						strEventType = jsonResponse.events[iEvent].type;
 
-						Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Event Type: {1}", lRequestId.ToString("X8"), strEventType);
+						if (_bQueLogging)
+							Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Event Type: {1}", lRequestId.ToString("X8"), strEventType);
 
 						switch (strEventType)
 						{
@@ -1023,7 +1024,8 @@ namespace HMX.HASSActronQue
 							case "status-change-broadcast":
 								foreach (JProperty change in jsonResponse.events[iEvent].data)
 								{
-									Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Incremental Update: {1}", lRequestId.ToString("X8"), change.Name);
+									if (_bQueLogging) 
+										Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Incremental Update: {1}", lRequestId.ToString("X8"), change.Name);
 
 									// Compressor Mode
 									if (change.Name == "LiveAircon.CompressorMode")
