@@ -23,6 +23,9 @@ If you Actron has sensors in each zone, setting this option to true will create 
 ### PollInterval: integer
 By default, the add-on will poll the Que API system every 30 seconds for updates. This can be set to between 10 and 300 seconds inclusive.
 
+### QueLogs: true/false
+Setting this option to false will reduce the amount of Que event logging.
+ 
 ### QueSerial: string
 If you have multiple AC units conencted to your Que, you can add this optional configuration to specify the serial number of the AC you want the add-on to use. You can find the discovered serial numbers in the log for the add-on when the add-on is starting. If you leave this field blank, the add-on will add all detected AC units.
 

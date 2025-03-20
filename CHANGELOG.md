@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2025.03.1] - 2025-03-19
+
+updates from MJ McGuire to match upstream repo
+
 ## [v2024.06.1] - 2024-06-19
 
 Initial commit to my repo
