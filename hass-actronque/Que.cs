@@ -792,6 +792,7 @@ namespace HMX.HASSActronQue
 		private static void ProcessFullStatus(long lRequestId, AirConditionerUnit unit, dynamic jsonResponse)
 		{
 			JArray aEnabledZones, aPeripherals;
+			string strSerial = "";
 
 			Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1}", lRequestId.ToString("X8"), unit.Serial);
 		
@@ -851,10 +852,17 @@ namespace HMX.HASSActronQue
 				{
 					for (int iPeripheralIndex = 0; iPeripheralIndex < aPeripherals.Count; iPeripheralIndex++)
 					{
-						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Peripheral {1}, {2}", lRequestId.ToString("X8"), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString());
-						
-					}				
+						// SerialNumber
+						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref strSerial);
 
+						if (!unit.Peripherals.ContainsKey(strSerial))
+							unit.Peripherals.Add(strSerial, new AirConditionerPeripheral(strSerial));
+						else
+							Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Duplicate Peripheral: {1}", lRequestId.ToString("X8"), strSerial);
+
+						// SerialNumber
+						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref unit.Peripherals[strSerial].Battery);
+					}
 				}
 			}
 

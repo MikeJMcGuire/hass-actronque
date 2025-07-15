@@ -8,5 +8,11 @@ namespace HMX.HASSActronQue
 	{
 		public string SerialNumber; // SerialNumber
 		public double Battery; // RemainingBatteryCapacity_pc
+
+		public AirConditionerPeripheral(string strSerialNumber)
+		{
+			SerialNumber = strSerialNumber;
+			Battery = 0;
+		}
 	}
 }
