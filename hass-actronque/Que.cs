@@ -50,14 +50,13 @@ namespace HMX.HASSActronQue
 		private static bool _bPerZoneControls = false;
 		private static bool _bPerZoneSensors = false;
 		private static bool _bSeparateHeatCool = false;
-		private static bool _bNeoNoEventMode = false;
+		private static bool _bDisableEventUpdates = false;
 		private static bool _bQueLogging = true;
 		private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClient = null, _httpClientAuth = null, _httpClientCommands = null;
 		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 15; // Seconds
-		private static int _iPollIntervalNeoNoEventsMode = 30; // Seconds
 		private static int _iPollIntervalUpdate = 5; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 4; // Seconds
@@ -112,7 +111,7 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bPerZoneSensors, bool bSeparateHeatCool, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bPerZoneSensors, bool bDisableEventUpdates, bool bSeparateHeatCool, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 			string strDeviceUniqueIdentifierInput;
@@ -128,6 +127,7 @@ namespace HMX.HASSActronQue
 			_bPerZoneControls = bPerZoneControls;
 			_bPerZoneSensors = bPerZoneSensors;
 			_iPollInterval = iPollInterval;
+			_bDisableEventUpdates = bDisableEventUpdates;
 			_bSeparateHeatCool = bSeparateHeatCool;
 			_eventStop = eventStop;
 
@@ -1238,7 +1238,7 @@ namespace HMX.HASSActronQue
 						Logging.WriteDebugLog("Que.AirConditionerMonitor() Quick Update");
 
 						// Normal Mode
-						if (!_bNeoNoEventMode)
+						if (!_bDisableEventUpdates)
 						{
 							_bCommandAckPending = true;
 							iCommandAckRetries = _iCommandAckRetryCounter;
@@ -1255,7 +1255,7 @@ namespace HMX.HASSActronQue
 								}
 							}
 						}
-						// Neo No Events Mode
+						// No Events Mode
 						else
 						{
 							Thread.Sleep(_iPostCommandSleepTimerNeoNoEventsMode * 1000);
@@ -1287,7 +1287,7 @@ namespace HMX.HASSActronQue
 						}
 
 						// Normal Mode
-						if (!_bNeoNoEventMode)
+						if (!_bDisableEventUpdates)
 						{
 							foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 							{
@@ -1303,13 +1303,13 @@ namespace HMX.HASSActronQue
 								else if (_strSystemType == "neo")
 								{
 									Logging.WriteDebugLog("Que.AirConditionerMonitor() No Neo Events Received - Switching to Full Status Polling");
-									_bNeoNoEventMode = true;
+									_bDisableEventUpdates = true;
 								}
 							}
 						}
 
-						// Neo No Events Mode
-						if (_bNeoNoEventMode)
+						// No Events Mode
+						if (_bDisableEventUpdates)
 						{
 							foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 							{
@@ -1342,7 +1342,7 @@ namespace HMX.HASSActronQue
 					iCommandAckRetries = 0;
 				}
 				else
-					iWaitInterval = (!_bNeoNoEventMode ? _iPollInterval : _iPollIntervalNeoNoEventsMode);
+					iWaitInterval = _iPollInterval;
 			}
 
 			Logging.WriteDebugLog("Que.AirConditionerMonitor() Complete");
@@ -1935,7 +1935,7 @@ namespace HMX.HASSActronQue
 				case "neo":
 					bZones = new bool[] { false, false, false, false, false, false, false, false };
 
-					if (_bNeoNoEventMode)
+					if (_bDisableEventUpdates)
 					{   // Temporarily set zone state to support subsequent zone changes before the next poll
 						if (unit.Zones.ContainsKey(iZone))
 							unit.Zones[iZone].State = bState;
