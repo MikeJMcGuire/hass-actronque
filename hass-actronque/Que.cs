@@ -952,7 +952,7 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			string strEventType;
+			string strEventType, strTimestamp;
 			int iIndex;
 			UpdateItems updateItems = UpdateItems.None;
 
@@ -1008,6 +1008,8 @@ namespace HMX.HASSActronQue
 						_bEventsReceived = true;
 
 						strEventType = jsonResponse.events[iEvent].type;
+						// Future experiment on last event received
+						// strTimestamp = jsonResponse.events[iEvent].timestamp;
 
 						if (_bQueLogging)
 							Logging.WriteDebugLog("Que.GetAirConditionerEvents() [0x{0}] Event Type: {1}", lRequestId.ToString("X8"), strEventType);
