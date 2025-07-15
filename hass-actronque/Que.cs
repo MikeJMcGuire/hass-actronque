@@ -791,7 +791,7 @@ namespace HMX.HASSActronQue
 
 		private static void ProcessFullStatus(long lRequestId, AirConditionerUnit unit, dynamic jsonResponse)
 		{
-			JArray aEnabledZones;
+			JArray aEnabledZones, aPeripherals;
 
 			Logging.WriteDebugLog("Que.ProcessFullStatus() [0x{0}] Unit: {1}", lRequestId.ToString("X8"), unit.Serial);
 		
@@ -840,6 +840,23 @@ namespace HMX.HASSActronQue
 
 			// Fan RPM
 			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM?.ToString(), ref unit.Data.FanRPM);
+
+			// Peripherals
+			if (_strSystemType == "neo")
+			{
+				aPeripherals = jsonResponse.AirconSystem.Peripherals;
+				if (aPeripherals.Count == 0)
+					Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Unable to read state information: {1}", lRequestId.ToString("X8"), "AirconSystem.Peripherals");
+				else
+				{
+					for (int iPeripheralIndex = 0; iPeripheralIndex < aPeripherals.Count; iPeripheralIndex++)
+					{
+						Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Peripheral {1}, {2}", lRequestId.ToString("X8"), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString());
+						
+					}				
+
+				}
+			}
 
 			// Zones
 			aEnabledZones = jsonResponse.UserAirconSettings.EnabledZones;
