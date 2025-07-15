@@ -861,7 +861,7 @@ namespace HMX.HASSActronQue
 							Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Duplicate Peripheral: {1}", lRequestId.ToString("X8"), strSerial);
 
 						// SerialNumber
-						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref unit.Peripherals[strSerial].Battery);
+						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString(), ref unit.Peripherals[strSerial].Battery);
 					}
 				}
 			}
