@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added option to disable event based updates and instead use periodic polling (to mitigate an Actron cloud service issue).
+- Added option to disable event based updates and instead use periodic polling (to mitigate an Actron cloud service issue). Note - this will need to be set to true to resolve the July cloud service issue (unauthorized).
 - Upgraded .NET packages.
 
 ## [v2025.3.1] - 2025-03-12
