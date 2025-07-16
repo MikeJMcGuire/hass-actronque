@@ -617,6 +617,9 @@ namespace HMX.HASSActronQue
 
 						Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
 
+						if (Service.IsDevelopment)
+							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Response: {1}", lRequestId.ToString("X8"), strResponse);
+
 						jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
 						// Zones
