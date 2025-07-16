@@ -706,7 +706,7 @@ namespace HMX.HASSActronQue
 								peripheral.DeviceType = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].DeviceType;
 								foreach (int iZone in jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].ZoneAssignment)
 								{
-									Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Peripheral: {1} - Zone {2}", lRequestId.ToString("X8"), peripheral.SerialNumber, iZone);
+									Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Peripheral: {1} ({2}) - Zone {3}", lRequestId.ToString("X8"), peripheral.SerialNumber, peripheral.DeviceType, iZone);
 									unit.Zones[iZone].Peripherals.Add(peripheral.SerialNumber, peripheral);
 								}
 
