@@ -532,7 +532,7 @@ namespace HMX.HASSActronQue
 
 						if (_strSerialNumber == "" || _strSerialNumber == strSerial)
 						{
-							unit = new AirConditionerUnit(strDescription.Trim(), strSerial);
+							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType);
 							_airConditionerUnits.Add(strSerial, unit);
 
 							Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Monitoring AC: {1}", lRequestId.ToString("X8"), strSerial);
@@ -596,6 +596,7 @@ namespace HMX.HASSActronQue
 
 			foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 			{
+				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Unit: {1} ({2})", lRequestId.ToString("X8"), unit.Name, unit.Serial);
 				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
 
 				if (!IsTokenValid())
@@ -621,6 +622,18 @@ namespace HMX.HASSActronQue
 							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Response: {1}", lRequestId.ToString("X8"), strResponse);
 
 						jsonResponse = JsonConvert.DeserializeObject(strResponse);
+
+						// Online
+						if (jsonResponse.ContainsKey("isOnline"))
+						{
+							unit.Online = bool.Parse(jsonResponse.isOnline.ToString());
+						
+							if (!unit.Online)
+							{
+								Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Time Since Last Update: {1}", lRequestId.ToString("X8"), TimeSpan.Parse(jsonResponse.timeSinceLastContact.ToString()).Hours);
+								
+							}
+						}
 
 						// Zones
 						if (jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("RemoteZoneInfo"))
