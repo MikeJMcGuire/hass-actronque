@@ -628,6 +628,7 @@ namespace HMX.HASSActronQue
 								{
 									zone = new AirConditionerZone();
 									zone.Sensors = new Dictionary<string, AirConditionerSensor>();
+									zone.Peripherals = new Dictionary<string, AirConditionerPeripheral>();
 									zone.Exists = true;
 
 									zone.Name = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].NV_Title;
@@ -655,6 +656,7 @@ namespace HMX.HASSActronQue
 								{
 									zone = new AirConditionerZone();
 									zone.Sensors = new Dictionary<string, AirConditionerSensor>();
+									zone.Peripherals = new Dictionary<string, AirConditionerPeripheral>();
 									zone.Exists = false;
 
 									Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Zone: {1} - Non Existent Zone", lRequestId.ToString("X8"), iZoneIndex + 1);
