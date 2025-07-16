@@ -2012,6 +2012,15 @@ namespace HMX.HASSActronQue
 							MQTT.SendMessage(string.Format("actronque{0}/zone{1}sensor{2}/battery", unit.Serial, iIndex, sensor.Serial), sensor.Battery.ToString("N1"));
 						}
 					}
+
+					// Per Zone Sensors/Controls
+					if ((_bPerZoneSensors | _bPerZoneControls) && _strSystemType == "neo")
+					{
+						foreach (AirConditionerPeripheral peripheral in unit.Zones[iIndex].Peripherals.Values)
+						{
+							MQTT.SendMessage(string.Format("actronque{0}/zone{1}sensor{2}/battery", unit.Serial, iIndex, peripheral.SerialNumber), peripheral.Battery.ToString("N1"));
+						}
+					}
 				}
 			}
 		}
