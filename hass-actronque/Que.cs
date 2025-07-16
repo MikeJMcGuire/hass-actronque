@@ -49,13 +49,12 @@ namespace HMX.HASSActronQue
 		private static string _strQueUser, _strQuePassword, _strSerialNumber;
 		//private static string _strNextEventURL = "";
 		private static bool _bPerZoneControls = false;
-		private static bool _bPerZoneSensors = false;
 		private static bool _bSeparateHeatCool = false;
 		private static bool _bDisableEventUpdates = false;
 		private static bool _bQueLogging = true;
 		private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
-		private static HttpClient _httpClient = null, _httpClientAuth = null, _httpClientCommands = null;
+		private static HttpClient _httpClient = null, _httpClientAuth = null;
 		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 15; // Seconds
 		private static int _iPollIntervalUpdate = 5; // Seconds
@@ -97,20 +96,16 @@ namespace HMX.HASSActronQue
 				_httpClientAuth = new HttpClient(new LoggingClientHandler(httpClientHandler));
 
 				_httpClient = new HttpClient(new LoggingClientHandler(httpClientHandler));
-
-				_httpClientCommands = new HttpClient(new LoggingClientHandler(httpClientHandler));
 			}
 			else
 			{
 				_httpClientAuth = new HttpClient(httpClientHandler);
 
 				_httpClient = new HttpClient(httpClientHandler);
-
-				_httpClientCommands = new HttpClient(httpClientHandler);
 			}
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bPerZoneSensors, bool bDisableEventUpdates, bool bSeparateHeatCool, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bDisableEventUpdates, bool bSeparateHeatCool, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 			string strDeviceUniqueIdentifierInput;
@@ -124,7 +119,6 @@ namespace HMX.HASSActronQue
 			_strSystemType = strSystemType;
 			_bQueLogging = bQueLogs;
 			_bPerZoneControls = bPerZoneControls;
-			_bPerZoneSensors = bPerZoneSensors;
 			_iPollInterval = iPollInterval;
 			_bDisableEventUpdates = bDisableEventUpdates;
 			_bSeparateHeatCool = bSeparateHeatCool;
@@ -132,7 +126,6 @@ namespace HMX.HASSActronQue
 
 			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
 			_httpClient.BaseAddress = new Uri(GetBaseURL());
-			_httpClientCommands.BaseAddress = new Uri(GetBaseURLCommands());
 
 			// Get Device Id
 			try
@@ -342,7 +335,8 @@ namespace HMX.HASSActronQue
 					_queToken = queToken;
 
 					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
-					_httpClientCommands.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+					foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
+						unit.HttpClientCommands.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
 
 					// Update Token File
 					try
@@ -533,6 +527,8 @@ namespace HMX.HASSActronQue
 						if (_strSerialNumber == "" || _strSerialNumber == strSerial)
 						{
 							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType);
+							unit.HttpClientCommands.BaseAddress = new Uri(GetBaseURLCommands(strType));
+
 							_airConditionerUnits.Add(strSerial, unit);
 
 							Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Monitoring AC: {1}", lRequestId.ToString("X8"), strSerial);
@@ -696,7 +692,7 @@ namespace HMX.HASSActronQue
 							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded - No Zone Data. Retrying.", lRequestId.ToString("X8"));
 
 						// Peripherals
-						if (_strSystemType == "neo" && jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("AirconSystem") && jsonResponse.lastKnownState.AirconSystem.ContainsKey("Peripherals"))
+						if (unit.ModelType == "neo" && jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("AirconSystem") && jsonResponse.lastKnownState.AirconSystem.ContainsKey("Peripherals"))
 						{
 							for (int iPeripheralIndex = 0; iPeripheralIndex < jsonResponse.lastKnownState.AirconSystem.Peripherals.Count; iPeripheralIndex++)
 							{
@@ -898,7 +894,7 @@ namespace HMX.HASSActronQue
 			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM?.ToString(), ref unit.Data.FanRPM);
 
 			// Peripherals
-			if (_strSystemType == "neo")
+			if (unit.ModelType == "neo")
 			{
 				aPeripherals = jsonResponse.AirconSystem.Peripherals;
 				if (aPeripherals.Count == 0)
@@ -948,7 +944,7 @@ namespace HMX.HASSActronQue
 						ProcessPartialStatus(lRequestId, string.Format("RemoteZoneInfo[{0}].ZonePosition", iZoneIndex), jsonResponse.RemoteZoneInfo[iZoneIndex].ZonePosition?.ToString(), ref unit.Zones[iZoneIndex + 1].Position);
 
 						// Zone Sensors Temperature
-						if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("RemoteTemperatures_oC") & _strSystemType == "que")
+						if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("RemoteTemperatures_oC") & unit.ModelType == "nxgen")
 						{
 							foreach (JProperty sensor in jsonResponse.RemoteZoneInfo[iZoneIndex].RemoteTemperatures_oC)
 							{
@@ -960,7 +956,7 @@ namespace HMX.HASSActronQue
 						}
 
 						// Zone Sensors Battery
-						if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors") & _strSystemType == "que")
+						if (jsonResponse.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors") & unit.ModelType == "nxgen")
 						{
 							foreach (JProperty sensor in jsonResponse.RemoteZoneInfo[iZoneIndex].Sensors)
 							{
@@ -1204,7 +1200,7 @@ namespace HMX.HASSActronQue
 										updateItems |= UpdateItems.Main;
 									}
 									// Peripherals
-									else if (_strSystemType == "neo" && change.Name.StartsWith("AirconSystem.Peripherals["))
+									else if (unit.ModelType == "neo" && change.Name.StartsWith("AirconSystem.Peripherals["))
 									{
 										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
 										strSerial = unit.Peripherals[iIndex].SerialNumber;
@@ -1399,7 +1395,7 @@ namespace HMX.HASSActronQue
 										MQTT.Update(null);
 									}
 								}
-								else if (_strSystemType == "neo")
+								else if (unit.ModelType == "neo")
 								{
 									Logging.WriteDebugLog("Que.AirConditionerMonitor() No Neo Events Received - Switching to Full Status Polling");
 									_bDisableEventUpdates = true;
@@ -1586,7 +1582,7 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}humidity/config", strHANameModifier), "{{\"name\":\"{1} Humidity\",\"unique_id\":\"{0}-Humidity\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/humidity\",\"unit_of_measurement\":\"%\",\"device_class\":\"humidity\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}temperature/config", strHANameModifier), "{{\"name\":\"{1} Temperature\",\"unique_id\":\"{0}-Temperature\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/temperature\",\"unit_of_measurement\":\"°C\",\"device_class\":\"temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 								
-				if (_strSystemType == "que")
+				if (unit.ModelType == "que")
 				{
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}compressorcapacity/config", strHANameModifier), "{{\"name\":\"{1} Compressor Capacity\",\"unique_id\":\"{0}-CompressorCapacity\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/compressorcapacity\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 					MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}compressorpower/config", strHANameModifier), "{{\"name\":\"{1} Compressor Power\",\"unique_id\":\"{0}-CompressorPower\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/compressorpower\",\"unit_of_measurement\":\"W\",\"device_class\":\"power\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
@@ -1642,61 +1638,22 @@ namespace HMX.HASSActronQue
 						}
 
 						// Per Zone Sensors (Que)
-						if (_strSystemType == "que")
+						if (unit.ModelType == "nxgen")
 						{
-							if (_bPerZoneSensors)
+							foreach (string sensor in zone.Sensors.Keys)
 							{
-								foreach (string sensor in zone.Sensors.Keys)
-								{
-									MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}temperature/config", strHANameModifier, iZone, sensor), "{{\"name\":\"{0} Temperature\",\"unique_id\":\"{2}-z{1}s{5}temperature\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/temperature\",\"device_class\":\"temperature\",\"unit_of_measurement\":\"\u00B0C\",\"availability_topic\":\"{2}/status\"}}", zone.Sensors[sensor].Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, sensor, unit.Serial);
-									MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}battery/config", strHANameModifier, iZone, sensor), "{{\"name\":\"{0} Battery\",\"unique_id\":\"{2}-z{1}s{5}battery\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/battery\",\"state_class\":\"measurement\",\"unit_of_measurement\":\"%\",\"device_class\":\"battery\",\"availability_topic\":\"{2}/status\"}}", zone.Sensors[sensor].Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, sensor, unit.Serial);
-								}
-							}
-							else
-							{
-								foreach (string sensor in zone.Sensors.Keys)
-								{
-									MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}temperature/config", strHANameModifier, iZone, sensor), "");
-								}
+								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}temperature/config", strHANameModifier, iZone, sensor), "{{\"name\":\"{0} Temperature\",\"unique_id\":\"{2}-z{1}s{5}temperature\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/temperature\",\"device_class\":\"temperature\",\"unit_of_measurement\":\"\u00B0C\",\"availability_topic\":\"{2}/status\"}}", zone.Sensors[sensor].Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, sensor, unit.Serial);
+								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}battery/config", strHANameModifier, iZone, sensor), "{{\"name\":\"{0} Battery\",\"unique_id\":\"{2}-z{1}s{5}battery\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/battery\",\"state_class\":\"measurement\",\"unit_of_measurement\":\"%\",\"device_class\":\"battery\",\"availability_topic\":\"{2}/status\"}}", zone.Sensors[sensor].Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, sensor, unit.Serial);
 							}
 						}
 
 						// Per Zone Sensors (Neo)
 						if (unit.ModelType == "neo")
-						{
-							if (_bPerZoneSensors)
-							{
-								foreach (string peripheral in zone.Peripherals.Keys)
-								{
-									//MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}temperature/config", strHANameModifier, iZone, peripheral), "{{\"name\":\"{0} Temperature\",\"unique_id\":\"{2}-z{1}s{5}temperature\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/temperature\",\"device_class\":\"temperature\",\"unit_of_measurement\":\"\u00B0C\",\"availability_topic\":\"{2}/status\"}}", zone.Sensors[sensor].Name, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, sensor, unit.Serial);
-									MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}battery/config", strHANameModifier, iZone, peripheral), "{{\"name\":\"{7} {0} Battery\",\"unique_id\":\"{2}-z{1}s{5}battery\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/battery\",\"state_class\":\"measurement\",\"unit_of_measurement\":\"%\",\"device_class\":\"battery\",\"availability_topic\":\"{2}/status\"}}", zone.Peripherals[peripheral].DeviceType, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, peripheral, unit.Serial, zone.Name);
-								}
-							}
-							else
-							{
-								foreach (string peripheral in zone.Peripherals.Keys)
-								{
-									//MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}temperature/config", strHANameModifier, iZone, peripheral), "");
-								}
-							}
-						}
-
-						// Clear Old Entities
-						if (!_bPerZoneSensors && !_bPerZoneControls && _strSystemType == "que")
-						{
-							foreach (string sensor in zone.Sensors.Keys)
-							{
-								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}battery/config", strHANameModifier, iZone, sensor), "");
-							}
-						}
-
-						// Clear Old Entities
-						if (!_bPerZoneSensors && !_bPerZoneControls && _strSystemType == "neo")
-						{
+						{						
 							foreach (string peripheral in zone.Peripherals.Keys)
 							{
-								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}battery/config", strHANameModifier, iZone, peripheral), "");
-							}
+								MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}/zone{1}sensor{2}battery/config", strHANameModifier, iZone, peripheral), "{{\"name\":\"{7} {0} Battery\",\"unique_id\":\"{2}-z{1}s{5}battery\",\"device\":{{\"identifiers\":[\"{2}\"],\"name\":\"{4}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{6}/zone{1}sensor{5}/battery\",\"state_class\":\"measurement\",\"unit_of_measurement\":\"%\",\"device_class\":\"battery\",\"availability_topic\":\"{2}/status\"}}", zone.Peripherals[peripheral].DeviceType, iZone, Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, peripheral, unit.Serial, zone.Name);
+							}							
 						}
 					}
 				}
@@ -1766,7 +1723,7 @@ namespace HMX.HASSActronQue
 				// Temperature
 				MQTT.SendMessage(string.Format("actronque{0}/temperature", unit.Serial), unit.Data.Temperature.ToString("N1"));
 
-				if (_strSystemType == "que")
+				if (unit.ModelType == "nxgen")
 					MQTT.SendMessage(string.Format("actronque{0}/outdoortemperature", unit.Serial), unit.Data.OutdoorTemperature.ToString("N1"));
 
 				// Humidity
@@ -1811,7 +1768,7 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("actronque{0}/settemperature/high", unit.Serial), unit.Data.SetTemperatureCooling.ToString("N1"));
 				MQTT.SendMessage(string.Format("actronque{0}/settemperature/low", unit.Serial), unit.Data.SetTemperatureHeating.ToString("N1"));
 
-				if (_strSystemType == "que")
+				if (unit.ModelType == "nxgen")
 				{
 					// Compressor
 					if (unit.Data.CompressorCapacity > 0)
@@ -1952,7 +1909,7 @@ namespace HMX.HASSActronQue
 						MQTT.SendMessage(string.Format("actronque{0}/zone{1}/settemperature/high", unit.Serial, iIndex), unit.Zones[iIndex].SetTemperatureCooling.ToString("N1"));
 						MQTT.SendMessage(string.Format("actronque{0}/zone{1}/settemperature/low", unit.Serial, iIndex), unit.Zones[iIndex].SetTemperatureHeating.ToString("N1"));
 
-						if (_strSystemType == "que")
+						if (unit.ModelType == "nxgen")
 						{
 							// Compressor
 							if (unit.Data.CompressorCapacity > 0 && unit.Zones[iIndex].Position > 0)
@@ -1996,7 +1953,7 @@ namespace HMX.HASSActronQue
 					}
 
 					// Per Zone Sensors
-					if (_bPerZoneSensors && _strSystemType == "que")
+					if (unit.ModelType == "nxgen")
 					{
 						foreach (AirConditionerSensor sensor in unit.Zones[iIndex].Sensors.Values)
 						{
@@ -2005,7 +1962,7 @@ namespace HMX.HASSActronQue
 					}
 
 					// Per Zone Sensors/Controls
-					if ((_bPerZoneSensors | _bPerZoneControls) && _strSystemType == "que")
+					if (_bPerZoneControls && unit.ModelType == "nxgen")
 					{
 						foreach (AirConditionerSensor sensor in unit.Zones[iIndex].Sensors.Values)
 						{
@@ -2014,7 +1971,7 @@ namespace HMX.HASSActronQue
 					}
 
 					// Per Zone Sensors/Controls
-					if ((_bPerZoneSensors | _bPerZoneControls) && _strSystemType == "neo")
+					if (_bPerZoneControls && unit.ModelType == "neo")
 					{
 						foreach (AirConditionerPeripheral peripheral in unit.Zones[iIndex].Peripherals.Values)
 						{
@@ -2066,9 +2023,9 @@ namespace HMX.HASSActronQue
 
 			command.Data.command.Add("type", "set-settings");
 
-			switch (_strSystemType)
+			switch (unit.ModelType)
 			{
-				case "que":
+				case "nxgen":
 					command.Data.command.Add(string.Format("UserAirconSettings.EnabledZones[{0}]", iZone - 1), bState);
 					break;
 
@@ -2110,9 +2067,9 @@ namespace HMX.HASSActronQue
 
 			command.Data.command.Add("type", "set-settings");
 
-			switch (_strSystemType)
+			switch (unit.ModelType)
 			{
-				case "que":
+				case "nxgen":
 					command.Data.command.Add(string.Format("MasterInfo.ControlAllZones"), bState);
 					break;
 
@@ -2298,7 +2255,7 @@ namespace HMX.HASSActronQue
 				cancellationToken = new CancellationTokenSource();
 				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-				httpResponse = await _httpClientCommands.PostAsync(strPageURL + command.Unit.Serial, content, cancellationToken.Token);
+				httpResponse = await command.Unit.HttpClientCommands.PostAsync(strPageURL + command.Unit.Serial, content, cancellationToken.Token);
 
 				if (httpResponse.IsSuccessStatusCode)
 					Logging.WriteDebugLog("Que.SendCommand() [0x{0}] Response {1}/{2}", lRequestId.ToString("X8"), httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
@@ -2369,11 +2326,11 @@ namespace HMX.HASSActronQue
 			return _strBaseURL;
 		}
 
-		private static string GetBaseURLCommands()
+		private static string GetBaseURLCommands(string strDeviceType)
 		{
-			switch (_strSystemType)
+			switch (strDeviceType)
 			{
-				case "que": return _strBaseURLQueCommands;
+				case "nxgen": return _strBaseURLQueCommands;
 				case "neo": return _strBaseURLNeoCommands;
 				default: return _strBaseURL;
 			}

@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 - Added entities for Neo sensor/controller batteries.
 - Added logic to ignore AC units that are offline for more than 20 hours (e.g. a que unit replaced with a neo).
 
+### Removed
+
+- Removed per zone sensor configuration item. If sensors are detected, they will be registered and updated by MQTT.
+- Removed system type configuration item. The add-on will now detect if each system is a Que or a Neo.
+
 ## [v2025.7.1] - 2025-07-15
 
 ### Changed

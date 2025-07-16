@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 
 namespace HMX.HASSActronQue
@@ -14,9 +15,15 @@ namespace HMX.HASSActronQue
 		public AirConditionerData Data;
 		public Dictionary<int, AirConditionerZone> Zones;	
 		public Dictionary<int, AirConditionerPeripheral> Peripherals;
+		public HttpClient HttpClientCommands;
 
 		public AirConditionerUnit(string strName, string strSerial, string strModelType)
 		{
+			HttpClientHandler httpClientHandler = new HttpClientHandler();
+
+			if (httpClientHandler.SupportsAutomaticDecompression)
+				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+
 			Name = strName;
 			Serial = strSerial;
 			ModelType = strModelType;
@@ -25,6 +32,11 @@ namespace HMX.HASSActronQue
 			Data = new AirConditionerData();
 			Zones = new Dictionary<int, AirConditionerZone>();
 			Peripherals = new Dictionary<int, AirConditionerPeripheral>();
+
+			if (Service.IsDevelopment)
+				HttpClientCommands = new HttpClient(new LoggingClientHandler(httpClientHandler));
+			else
+				HttpClientCommands = new HttpClient(httpClientHandler);
 		}
 	}
 }
