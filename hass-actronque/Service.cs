@@ -34,9 +34,9 @@ namespace HMX.HASSActronQue
 			IConfigurationRoot configuration;
 			IHost webHost;
 			string strMQTTUser, strMQTTPassword, strMQTTBroker;
-			string strQueUser, strQuePassword, strQueSerial, strSystemType;
+			string strQueUser, strQuePassword, strQueSerial;
 			int iPollInterval;
-			bool bPerZoneControls, bQueLogging, bMQTTLogging, bMQTTTLS, bDisableEventUpdates, bSeparateHeatCool;
+			bool bPerZoneControls, bQueLogging, bMQTTLogging, bMQTTTLS, bSeparateHeatCool;
 
 			Logging.WriteDebugLog("Service.Start() Build Date: {0}", Properties.Resources.BuildDate);
 
@@ -81,24 +81,7 @@ namespace HMX.HASSActronQue
 			Configuration.GetOptionalConfiguration(configuration, "QueLogs", out bQueLogging, true);
 			Configuration.GetOptionalConfiguration(configuration, "QueSerial", out strQueSerial);
 
-			Configuration.GetOptionalConfiguration(configuration, "DisableEventUpdates", out bDisableEventUpdates);
 			Configuration.GetOptionalConfiguration(configuration, "SeparateHeatCoolTargets", out bSeparateHeatCool);
-
-			Configuration.GetOptionalConfiguration(configuration, "SystemType", out strSystemType);
-			if (strSystemType == "")
-			{
-				Logging.WriteDebugLog("Service.Start() System Type not specified, defaulting to que.");
-				strSystemType = "que";
-			}
-			else
-			{
-				strSystemType = strSystemType.ToLower().Trim();
-				if (strSystemType != "que" && strSystemType != "neo")
-				{
-					Logging.WriteDebugLog("Service.Start() System Type must be que or neo.");
-					return;
-				}
-			}
 
 			try
 			{
@@ -115,7 +98,7 @@ namespace HMX.HASSActronQue
 
 			MQTT.StartMQTT(strMQTTBroker, bMQTTLogging, bMQTTTLS, _strServiceName, strMQTTUser, strMQTTPassword, MQTTProcessor);
 
-			Que.Initialise(strQueUser, strQuePassword, strQueSerial, strSystemType, iPollInterval, bQueLogging, bPerZoneControls, bDisableEventUpdates, bSeparateHeatCool, _eventStop);
+			Que.Initialise(strQueUser, strQuePassword, strQueSerial, iPollInterval, bQueLogging, bPerZoneControls, bSeparateHeatCool, _eventStop);
 
 			webHost.Run();
 		}

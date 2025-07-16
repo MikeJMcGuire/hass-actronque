@@ -39,7 +39,6 @@ namespace HMX.HASSActronQue
 		private static string _strBaseURLQueCommands = "https://que.actronair.com.au/";
 		private static string _strBaseURLNeoCommands = "https://nimbus.actronair.com.au/";
 		private static string _strBaseURL = "https://nimbus.actronair.com.au/";
-		private static string _strSystemType;
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
 		private static string _strDeviceIdFile = "/data/deviceid.json";
@@ -105,7 +104,7 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, string strSystemType, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bDisableEventUpdates, bool bSeparateHeatCool, ManualResetEvent eventStop)
+		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bSeparateHeatCool, ManualResetEvent eventStop)
 		{
 			Thread threadMonitor;
 			string strDeviceUniqueIdentifierInput;
@@ -116,11 +115,10 @@ namespace HMX.HASSActronQue
 			_strQueUser = strQueUser;
 			_strQuePassword = strQuePassword;
 			_strSerialNumber = strSerialNumber;
-			_strSystemType = strSystemType;
 			_bQueLogging = bQueLogs;
 			_bPerZoneControls = bPerZoneControls;
 			_iPollInterval = iPollInterval;
-			_bDisableEventUpdates = bDisableEventUpdates;
+			_bDisableEventUpdates = false; // Start in events mode
 			_bSeparateHeatCool = bSeparateHeatCool;
 			_eventStop = eventStop;
 
@@ -1270,7 +1268,8 @@ namespace HMX.HASSActronQue
 					{
 						Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
-						_eventAuthenticationFailure.Set();
+						Logging.WriteDebugLog("Que.GetAirConditionerEvents() Events Endpoint Unauthorized, Switching to Full Status Polling");
+						_bDisableEventUpdates = true;
 					}
 					else
 						Logging.WriteDebugLogError("Que.GetAirConditionerEvents()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);

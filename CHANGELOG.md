@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 - Removed per zone sensor configuration item. If sensors are detected, they will be registered and updated by MQTT.
 - Removed system type configuration item. The add-on will now detect if each system is a Que or a Neo.
+- Removed disable event based updates configuration item (added in 2025.7.0). If the events endpoint returns unauthorized, the add-on will switch automatically to full status polling.
 
 ## [v2025.7.1] - 2025-07-15
 
