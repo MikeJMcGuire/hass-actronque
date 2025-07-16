@@ -675,10 +675,13 @@ namespace HMX.HASSActronQue
 								peripheral = new AirConditionerPeripheral();
 
 								peripheral.SerialNumber = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber;
-								foreach (string strZone in jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].ZoneAssignment)
-									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2}", lRequestId.ToString("X8"), peripheral.SerialNumber, strZone);
+								foreach (int iZone in jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].ZoneAssignment)
+								{
+									Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Peripheral: {1} - Zone {2}", lRequestId.ToString("X8"), peripheral.SerialNumber, iZone);
+									unit.Zones[iZone].Peripherals.Add(peripheral.SerialNumber, peripheral);
+								}
 
-								unit.Peripherals.Add(iPeripheralIndex, peripheral);
+								unit.Peripherals.Add(iPeripheralIndex, peripheral);								
 							}
 						}
 						else
@@ -860,7 +863,7 @@ namespace HMX.HASSActronQue
 			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM?.ToString(), ref unit.Data.FanRPM);
 
 			// Peripherals
-			/*if (_strSystemType == "neo")
+			if (_strSystemType == "neo")
 			{
 				aPeripherals = jsonResponse.AirconSystem.Peripherals;
 				if (aPeripherals.Count == 0)
@@ -869,16 +872,20 @@ namespace HMX.HASSActronQue
 				{
 					for (int iPeripheralIndex = 0; iPeripheralIndex < aPeripherals.Count; iPeripheralIndex++)
 					{
-						unit.Peripherals.Add(iPeripheralIndex, new AirConditionerPeripheral());
-
 						// SerialNumber
-						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref unit.Peripherals[iPeripheralIndex].SerialNumber);
+						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref strSerial);
 
-						// Battery
-						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].RemainingBatteryCapacity_pc", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString(), ref unit.Peripherals[iPeripheralIndex].Battery);
+						foreach (AirConditionerZone zone in unit.Zones.Values)
+						{
+							if (zone.Peripherals.ContainsKey(strSerial))
+							{
+								// Battery
+								ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].RemainingBatteryCapacity_pc", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString(), ref zone.Peripherals[strSerial].Battery);
+							}
+						}
 					}
 				}
-			}*/
+			}
 
 			// Zones
 			aEnabledZones = jsonResponse.UserAirconSettings.EnabledZones;
@@ -994,7 +1001,7 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			string strEventType, strTimestamp;
+			string strEventType, strSerial;
 			int iIndex;
 			UpdateItems updateItems = UpdateItems.None;
 
@@ -1160,6 +1167,21 @@ namespace HMX.HASSActronQue
 									{
 										ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref unit.Data.FanRPM);
 										updateItems |= UpdateItems.Main;
+									}
+									// Peripherals
+									else if (_strSystemType == "neo" && change.Name.StartsWith("AirconSystem.Peripherals["))
+									{
+										iIndex = int.Parse(change.Name.Substring(change.Name.IndexOf("[") + 1, 1));
+										strSerial = unit.Peripherals[iIndex].SerialNumber;
+
+										foreach (AirConditionerZone zone in unit.Zones.Values)
+										{
+											if (zone.Peripherals.ContainsKey(strSerial))
+											{
+												// Battery
+												ProcessPartialStatus(lRequestId, change.Name, change.Value.ToString(), ref zone.Peripherals[strSerial].Battery);
+											}
+										}
 									}
 									// Remote Zone
 									else if (change.Name.StartsWith("RemoteZoneInfo["))
