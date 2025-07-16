@@ -11,7 +11,7 @@ namespace HMX.HASSActronQue
 		public string Serial;
 		public AirConditionerData Data;
 		public Dictionary<int, AirConditionerZone> Zones;	
-		public Dictionary<string, AirConditionerPeripheral> Peripherals;
+		public Dictionary<int, AirConditionerPeripheral> Peripherals;
 
 		public AirConditionerUnit(string strName, string strSerial)
 		{
@@ -20,7 +20,7 @@ namespace HMX.HASSActronQue
 			NextEventURL = "";
 			Data = new AirConditionerData();
 			Zones = new Dictionary<int, AirConditionerZone>();
-			Peripherals = new Dictionary<string, AirConditionerPeripheral>();
+			Peripherals = new Dictionary<int, AirConditionerPeripheral>();
 		}
 	}
 }

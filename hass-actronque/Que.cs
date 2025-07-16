@@ -579,7 +579,7 @@ namespace HMX.HASSActronQue
 			return bRetVal;
 		}
 
-		private async static Task<bool> GetAirConditionerZones()
+		private async static Task<bool> GetAirConditionerZonesAndPeripherals()
 		{
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
@@ -588,15 +588,15 @@ namespace HMX.HASSActronQue
 			string strResponse;
 			dynamic jsonResponse;
 			bool bRetVal = true;
-			//Dictionary<int, AirConditionerZone> dZones = new Dictionary<int, AirConditionerZone>();
 			AirConditionerZone zone;
 			AirConditionerSensor sensor;
+			AirConditionerPeripheral peripheral;
 
 			_iZoneCount = 0;
 
 			foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 			{
-				Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
+				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
 
 				if (!IsTokenValid())
 				{
@@ -615,7 +615,7 @@ namespace HMX.HASSActronQue
 					{
 						strResponse = await httpResponse.Content.ReadAsStringAsync();
 
-						Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
+						Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded (Encoding {1}, {2} bytes)", lRequestId.ToString("X8"), httpResponse.Content.Headers.ContentEncoding.ToString() == "" ? "N/A" : httpResponse.Content.Headers.ContentEncoding.ToString(), (httpResponse.Content.Headers.ContentLength ?? 0) == 0 ? "N/A" : httpResponse.Content.Headers.ContentLength.ToString());
 
 						jsonResponse = JsonConvert.DeserializeObject(strResponse);
 
@@ -635,7 +635,7 @@ namespace HMX.HASSActronQue
 										zone.Name = "Zone " + (iZoneIndex + 1);
 									zone.Temperature = jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].LiveTemp_oC;
 
-									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, zone.Name);
+									Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Zone: {1} - {2}", lRequestId.ToString("X8"), iZoneIndex + 1, zone.Name);
 
 									if (jsonResponse.lastKnownState.RemoteZoneInfo[iZoneIndex].ContainsKey("Sensors"))
 									{
@@ -645,7 +645,7 @@ namespace HMX.HASSActronQue
 											sensor.Name = zone.Name + " Sensor " + sensorJson.Name;
 											sensor.Serial = sensorJson.Name;
 
-											Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone Sensor: {1}", lRequestId.ToString("X8"), sensorJson.Name);
+											Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Zone Sensor: {1}", lRequestId.ToString("X8"), sensorJson.Name);
 
 											zone.Sensors.Add(sensorJson.Name, sensor);
 										}
@@ -657,7 +657,7 @@ namespace HMX.HASSActronQue
 									zone.Sensors = new Dictionary<string, AirConditionerSensor>();
 									zone.Exists = false;
 
-									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Zone: {1} - Non Existent Zone", lRequestId.ToString("X8"), iZoneIndex + 1);
+									Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Zone: {1} - Non Existent Zone", lRequestId.ToString("X8"), iZoneIndex + 1);
 								}
 
 								unit.Zones.Add(iZoneIndex + 1, zone);
@@ -665,18 +665,36 @@ namespace HMX.HASSActronQue
 							}
 						}
 						else
-							Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Responded - No Data. Retrying.", lRequestId.ToString("X8"));
+							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded - No Zone Data. Retrying.", lRequestId.ToString("X8"));
+
+						// Peripherals
+						if (_strSystemType == "neo" && jsonResponse.ContainsKey("lastKnownState") && jsonResponse.lastKnownState.ContainsKey("AirconSystem") && jsonResponse.lastKnownState.AirconSystem.ContainsKey("Peripherals"))
+						{
+							for (int iPeripheralIndex = 0; iPeripheralIndex < jsonResponse.lastKnownState.AirconSystem.Peripherals.Count; iPeripheralIndex++)
+							{
+								peripheral = new AirConditionerPeripheral();
+
+								peripheral.SerialNumber = jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber;
+								foreach (string strZone in jsonResponse.lastKnownState.AirconSystem.Peripherals[iPeripheralIndex].ZoneAssignment)
+									Logging.WriteDebugLog("Que.GetAirConditionerZones() [0x{0}] Peripheral: {1} - {2}", lRequestId.ToString("X8"), peripheral.SerialNumber, strZone);
+
+								unit.Peripherals.Add(iPeripheralIndex, peripheral);
+							}
+						}
+						else
+							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded - No Peripheral Data. Retrying.", lRequestId.ToString("X8"));
+						
 					}
 					else
 					{
 						if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
 						{
-							Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+							Logging.WriteDebugLogError("Que.GetAirConditionerZonesAndPeripherals()", lRequestId, "Unable to process API response: {0}/{1}", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 							_eventAuthenticationFailure.Set();
 						}
 						else
-							Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, "Unable to process API response: {0}/{1}. Is the serial number correct?", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
+							Logging.WriteDebugLogError("Que.GetAirConditionerZonesAndPeripherals()", lRequestId, "Unable to process API response: {0}/{1}. Is the serial number correct?", httpResponse.StatusCode.ToString(), httpResponse.ReasonPhrase);
 
 						bRetVal = false;
 						goto Cleanup;
@@ -684,7 +702,7 @@ namespace HMX.HASSActronQue
 				}
 				catch (OperationCanceledException eException)
 				{
-					Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
+					Logging.WriteDebugLogError("Que.GetAirConditionerZonesAndPeripherals()", lRequestId, eException, "Unable to process API HTTP response - operation timed out.");
 
 					bRetVal = false;
 					goto Cleanup;
@@ -692,9 +710,9 @@ namespace HMX.HASSActronQue
 				catch (Exception eException)
 				{
 					if (eException.InnerException != null)
-						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
+						Logging.WriteDebugLogError("Que.GetAirConditionerZonesAndPeripherals()", lRequestId, eException.InnerException, "Unable to process API HTTP response. Is the serial number correct?");
 					else
-						Logging.WriteDebugLogError("Que.GetAirConditionerZones()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
+						Logging.WriteDebugLogError("Que.GetAirConditionerZonesAndPeripherals()", lRequestId, eException, "Unable to process API HTTP response. Is the serial number correct?");
 
 					bRetVal = false;
 					goto Cleanup;
@@ -842,7 +860,7 @@ namespace HMX.HASSActronQue
 			ProcessPartialStatus(lRequestId, "LiveAircon.FanRPM", jsonResponse.LiveAircon.FanRPM?.ToString(), ref unit.Data.FanRPM);
 
 			// Peripherals
-			if (_strSystemType == "neo")
+			/*if (_strSystemType == "neo")
 			{
 				aPeripherals = jsonResponse.AirconSystem.Peripherals;
 				if (aPeripherals.Count == 0)
@@ -851,19 +869,16 @@ namespace HMX.HASSActronQue
 				{
 					for (int iPeripheralIndex = 0; iPeripheralIndex < aPeripherals.Count; iPeripheralIndex++)
 					{
-						// SerialNumber
-						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref strSerial);
-
-						if (!unit.Peripherals.ContainsKey(strSerial))
-							unit.Peripherals.Add(strSerial, new AirConditionerPeripheral(strSerial));
-						else
-							Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Duplicate Peripheral: {1}", lRequestId.ToString("X8"), strSerial);
+						unit.Peripherals.Add(iPeripheralIndex, new AirConditionerPeripheral());
 
 						// SerialNumber
-						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].RemainingBatteryCapacity_pc", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString(), ref unit.Peripherals[strSerial].Battery);
+						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].SerialNumber", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].SerialNumber?.ToString(), ref unit.Peripherals[iPeripheralIndex].SerialNumber);
+
+						// Battery
+						ProcessPartialStatus(lRequestId, string.Format("AirconSystem.Peripherals[{0}].RemainingBatteryCapacity_pc", iPeripheralIndex), jsonResponse.AirconSystem.Peripherals[iPeripheralIndex].RemainingBatteryCapacity_pc?.ToString(), ref unit.Peripherals[iPeripheralIndex].Battery);
 					}
 				}
-			}
+			}*/
 
 			// Zones
 			aEnabledZones = jsonResponse.UserAirconSettings.EnabledZones;
@@ -1307,7 +1322,7 @@ namespace HMX.HASSActronQue
 
 						if (_iZoneCount == 0)
 						{
-							if (!await GetAirConditionerZones())
+							if (!await GetAirConditionerZonesAndPeripherals())
 								continue;
 							else
 								MQTTRegister();
