@@ -591,6 +591,7 @@ namespace HMX.HASSActronQue
 			AirConditionerZone zone;
 			AirConditionerSensor sensor;
 			AirConditionerPeripheral peripheral;
+			List<string> lUnitsToRemove = new List<string>();
 
 			_iZoneCount = 0;
 
@@ -630,8 +631,11 @@ namespace HMX.HASSActronQue
 						
 							if (!unit.Online)
 							{
-								Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Time Since Last Update: {1}", lRequestId.ToString("X8"), TimeSpan.Parse(jsonResponse.timeSinceLastContact.ToString()).Hours);
-								
+								Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Unit Offline ({1} hours)", lRequestId.ToString("X8"), TimeSpan.Parse(jsonResponse.timeSinceLastContact.ToString()).Hours);
+
+								lUnitsToRemove.Add(unit.Serial);
+
+								continue;
 							}
 						}
 
@@ -742,6 +746,12 @@ namespace HMX.HASSActronQue
 			Cleanup:
 				cancellationToken?.Dispose();
 				httpResponse?.Dispose();
+			}
+
+			foreach (string strSerial in lUnitsToRemove)
+			{
+				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Removing offline unit {1}", lRequestId.ToString("X8"), strSerial);
+				_airConditionerUnits.Remove(strSerial);
 			}
 
 			return bRetVal;
