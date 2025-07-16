@@ -6,13 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added entities for Neo sensor/controller batteries.
-
-## [v2025.7.0] - 2025-07-15
-
-### Added
-
-- Added option to disable event based updates and instead use periodic polling (to mitigate an Actron cloud service issue). Note - this will need to be set to true to resolve the July cloud service issue (unauthorized).
-
+- Added logic to ignore AC units that are offline for more than 20 hours (e.g. a que unit replaced with a neo).
 
 ## [v2025.7.1] - 2025-07-15
 

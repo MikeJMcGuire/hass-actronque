@@ -7,6 +7,7 @@ namespace HMX.HASSActronQue
 	public class AirConditionerPeripheral
 	{
 		public string SerialNumber; // SerialNumber
+		public string DeviceType; // DeviceType
 		public double Battery; // RemainingBatteryCapacity_pc
 
 		public AirConditionerPeripheral()
