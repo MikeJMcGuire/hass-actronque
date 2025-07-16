@@ -55,7 +55,7 @@ namespace HMX.HASSActronQue
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClient = null, _httpClientAuth = null;
 		private static int _iCancellationTime = 15; // Seconds
-		private static int _iPollInterval = 15; // Seconds
+		private static int _iPollInterval = 30; // Seconds
 		private static int _iPollIntervalUpdate = 5; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 4; // Seconds
@@ -708,8 +708,7 @@ namespace HMX.HASSActronQue
 							}
 						}
 						else
-							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded - No Peripheral Data. Retrying.", lRequestId.ToString("X8"));
-						
+							Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Responded - No Peripheral Data. Retrying.", lRequestId.ToString("X8"));						
 					}
 					else
 					{
