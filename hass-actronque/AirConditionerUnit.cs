@@ -17,7 +17,7 @@ namespace HMX.HASSActronQue
 		public Dictionary<int, AirConditionerPeripheral> Peripherals;
 		public HttpClient HttpClientCommands, HttpClientStatus;
 
-		public AirConditionerUnit(string strName, string strSerial, string strModelType, string strBearerToken)
+		public AirConditionerUnit(string strName, string strSerial, string strModelType, string strBearerToken, Uri uriBaseAddress)
 		{
 			HttpClientHandler httpClientHandler = new HttpClientHandler();
 
@@ -43,6 +43,9 @@ namespace HMX.HASSActronQue
 				HttpClientStatus = new HttpClient(httpClientHandler); 
 				HttpClientCommands = new HttpClient(httpClientHandler);
 			}
+
+			HttpClientStatus.BaseAddress = uriBaseAddress;
+			HttpClientCommands.BaseAddress = uriBaseAddress;
 
 			UpdateBearerToken(strBearerToken);
 		}

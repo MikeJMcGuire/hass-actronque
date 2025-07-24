@@ -51,7 +51,7 @@ namespace HMX.HASSActronQue
 		private static bool _bSeparateHeatCool = false;
 		//private static bool _bDisableEventUpdates = true;
 		private static bool _bQueLogging = true;
-		private static bool _bEventsReceived = false;
+		//private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClientAuth = null, _httpClient = null;
 		private static int _iCancellationTime = 15; // Seconds
@@ -60,9 +60,9 @@ namespace HMX.HASSActronQue
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 4; // Seconds
 		private static int _iCommandExpiry = 12; // Seconds
-		private static int _iPostCommandSleepTimer = 2; // Seconds
+		//private static int _iPostCommandSleepTimer = 2; // Seconds
 		private static int _iPostCommandSleepTimerNeoNoEventsMode = 10; // Seconds
-		private static int _iCommandAckRetryCounter = 3;
+		//private static int _iCommandAckRetryCounter = 3;
 		private static int _iFailedBearerRequests = 0;
 		private static int _iFailedBearerRequestMaximum = 10; // Retries
 		private static int _iZoneCount = 0;
@@ -522,9 +522,7 @@ namespace HMX.HASSActronQue
 
 						if (_strSerialNumber == "" || _strSerialNumber == strSerial)
 						{
-							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType, _queToken.BearerToken);
-							unit.HttpClientStatus.BaseAddress = new Uri(GetBaseURLDevice(strType));
-							unit.HttpClientCommands.BaseAddress = new Uri(GetBaseURLDevice(strType));
+							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType, _queToken.BearerToken, new Uri(GetBaseURLDevice(strType)));
 
 							_airConditionerUnits.Add(strSerial, unit);
 
