@@ -36,8 +36,8 @@ namespace HMX.HASSActronQue
 			Low
 		}
 
-		private static string _strBaseURLQueCommands = "https://que.actronair.com.au/";
-		private static string _strBaseURLNeoCommands = "https://nimbus.actronair.com.au/";
+		private static string _strBaseURLQue = "https://que.actronair.com.au/";
+		private static string _strBaseURLNeo = "https://nimbus.actronair.com.au/";
 		private static string _strBaseURL = "https://nimbus.actronair.com.au/";
 		private static string _strDeviceName = "HASSActronQue";
 		private static string _strAirConditionerName = "Air Conditioner";
@@ -49,11 +49,11 @@ namespace HMX.HASSActronQue
 		//private static string _strNextEventURL = "";
 		private static bool _bPerZoneControls = false;
 		private static bool _bSeparateHeatCool = false;
-		private static bool _bDisableEventUpdates = false;
+		//private static bool _bDisableEventUpdates = true;
 		private static bool _bQueLogging = true;
 		private static bool _bEventsReceived = false;
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
-		private static HttpClient _httpClient = null, _httpClientAuth = null;
+		private static HttpClient _httpClientAuth = null, _httpClient = null;
 		private static int _iCancellationTime = 15; // Seconds
 		private static int _iPollInterval = 30; // Seconds
 		private static int _iPollIntervalUpdate = 5; // Seconds
@@ -92,15 +92,13 @@ namespace HMX.HASSActronQue
 
 			if (Service.IsDevelopment)
 			{
-				_httpClientAuth = new HttpClient(new LoggingClientHandler(httpClientHandler));
-
 				_httpClient = new HttpClient(new LoggingClientHandler(httpClientHandler));
+				_httpClientAuth = new HttpClient(new LoggingClientHandler(httpClientHandler));
 			}
 			else
 			{
-				_httpClientAuth = new HttpClient(httpClientHandler);
-
 				_httpClient = new HttpClient(httpClientHandler);
+				_httpClientAuth = new HttpClient(httpClientHandler);
 			}
 		}
 
@@ -118,12 +116,12 @@ namespace HMX.HASSActronQue
 			_bQueLogging = bQueLogs;
 			_bPerZoneControls = bPerZoneControls;
 			_iPollInterval = iPollInterval;
-			_bDisableEventUpdates = false; // Start in events mode
+			//_bDisableEventUpdates = true; // Start in full status mode
 			_bSeparateHeatCool = bSeparateHeatCool;
 			_eventStop = eventStop;
 
-			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
 			_httpClient.BaseAddress = new Uri(GetBaseURL());
+			_httpClientAuth.BaseAddress = new Uri(GetBaseURL());
 
 			// Get Device Id
 			try
@@ -334,7 +332,10 @@ namespace HMX.HASSActronQue
 
 					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
 					foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
+					{
+						unit.HttpClientStatus.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
 						unit.HttpClientCommands.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
+					}
 
 					// Update Token File
 					try
@@ -525,7 +526,8 @@ namespace HMX.HASSActronQue
 						if (_strSerialNumber == "" || _strSerialNumber == strSerial)
 						{
 							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType);
-							unit.HttpClientCommands.BaseAddress = new Uri(GetBaseURLCommands(strType));
+							unit.HttpClientStatus.BaseAddress = new Uri(GetBaseURLDevice(strType));
+							unit.HttpClientCommands.BaseAddress = new Uri(GetBaseURLDevice(strType));
 
 							_airConditionerUnits.Add(strSerial, unit);
 
@@ -593,7 +595,7 @@ namespace HMX.HASSActronQue
 			foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 			{
 				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Unit: {1} ({2})", lRequestId.ToString("X8"), unit.Name, unit.Serial);
-				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
+				Logging.WriteDebugLog("Que.GetAirConditionerZonesAndPeripherals() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), unit.HttpClientStatus.BaseAddress, strPageURL, unit.Serial);
 
 				if (!IsTokenValid())
 				{
@@ -606,7 +608,7 @@ namespace HMX.HASSActronQue
 					cancellationToken = new CancellationTokenSource();
 					cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-					httpResponse = await _httpClient.GetAsync(strPageURL + unit.Serial, cancellationToken.Token);
+					httpResponse = await unit.HttpClientStatus.GetAsync(strPageURL + unit.Serial, cancellationToken.Token);
 
 					if (httpResponse.IsSuccessStatusCode)
 					{
@@ -767,7 +769,7 @@ namespace HMX.HASSActronQue
 			dynamic jsonResponse;
 			UpdateItems updateItems = UpdateItems.None;
 
-			Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL, unit.Serial);
+			Logging.WriteDebugLog("Que.GetAirConditionerFullStatus() [0x{0}] Base: {1}{2}{3}", lRequestId.ToString("X8"), unit.HttpClientStatus.BaseAddress, strPageURL, unit.Serial);
 
 			if (!IsTokenValid())
 				goto Cleanup;
@@ -777,7 +779,7 @@ namespace HMX.HASSActronQue
 				cancellationToken = new CancellationTokenSource();
 				cancellationToken.CancelAfter(TimeSpan.FromSeconds(_iCancellationTime));
 
-				httpResponse = await _httpClient.GetAsync(strPageURL + unit.Serial, cancellationToken.Token);
+				httpResponse = await unit.HttpClientStatus.GetAsync(strPageURL + unit.Serial, cancellationToken.Token);
 
 				if (httpResponse.IsSuccessStatusCode)
 				{
@@ -1020,7 +1022,7 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-		private async static Task<UpdateItems> GetAirConditionerEvents(AirConditionerUnit unit)
+		/*private async static Task<UpdateItems> GetAirConditionerEvents(AirConditionerUnit unit)
 		{
 			HttpResponseMessage httpResponse = null;
 			CancellationTokenSource cancellationToken = null;
@@ -1303,7 +1305,7 @@ namespace HMX.HASSActronQue
 				unit.NextEventURL = "";			
 
 			return updateItems;
-		}
+		}*/
 
 		private async static void AirConditionerMonitor()
 		{
@@ -1331,7 +1333,7 @@ namespace HMX.HASSActronQue
 						Logging.WriteDebugLog("Que.AirConditionerMonitor() Quick Update");
 
 						// Normal Mode
-						if (!_bDisableEventUpdates)
+						/*if (!_bDisableEventUpdates)
 						{
 							_bCommandAckPending = true;
 							iCommandAckRetries = _iCommandAckRetryCounter;
@@ -1347,10 +1349,10 @@ namespace HMX.HASSActronQue
 									MQTT.Update(null);
 								}
 							}
-						}
+						}*/
 						// No Events Mode
-						else
-						{
+						//else
+						//{
 							Thread.Sleep(_iPostCommandSleepTimerNeoNoEventsMode * 1000);
 
 							foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
@@ -1362,7 +1364,7 @@ namespace HMX.HASSActronQue
 									MQTT.Update(null);
 								}
 							}
-						}
+						//}
 
 						break;
 
@@ -1380,7 +1382,7 @@ namespace HMX.HASSActronQue
 						}
 
 						// Normal Mode
-						if (!_bDisableEventUpdates)
+						/*if (!_bDisableEventUpdates)
 						{
 							foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 							{
@@ -1399,11 +1401,11 @@ namespace HMX.HASSActronQue
 									_bDisableEventUpdates = true;
 								}
 							}
-						}
+						}*/
 
 						// No Events Mode
-						if (_bDisableEventUpdates)
-						{
+						//if (_bDisableEventUpdates)
+						//{
 							foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
 							{
 								updateItems = await GetAirConditionerFullStatus(unit);
@@ -1413,7 +1415,7 @@ namespace HMX.HASSActronQue
 									MQTT.Update(null);
 								}
 							}
-						}
+						//}
 
 						break;
 				}
@@ -2024,19 +2026,26 @@ namespace HMX.HASSActronQue
 			switch (unit.ModelType)
 			{
 				case "nxgen":
+					// Temporarily set zone state to support subsequent zone changes before the next poll
+					if (unit.Zones.ContainsKey(iZone))
+						unit.Zones[iZone].State = bState;
+
+					MQTT.SendMessage(string.Format("actronque{0}/zone{1}", unit.Serial, iZone), unit.Zones[iZone].State ? "ON" : "OFF");
+
 					command.Data.command.Add(string.Format("UserAirconSettings.EnabledZones[{0}]", iZone - 1), bState);
 					break;
 
 				case "neo":
 					bZones = new bool[] { false, false, false, false, false, false, false, false };
 
-					if (_bDisableEventUpdates)
-					{   // Temporarily set zone state to support subsequent zone changes before the next poll
-						if (unit.Zones.ContainsKey(iZone))
-							unit.Zones[iZone].State = bState;
+					//if (_bDisableEventUpdates)
+					//{   
+					// Temporarily set zone state to support subsequent zone changes before the next poll
+					if (unit.Zones.ContainsKey(iZone))
+						unit.Zones[iZone].State = bState;
 
-						MQTT.SendMessage(string.Format("actronque{0}/zone{1}", unit.Serial, iZone), unit.Zones[iZone].State ? "ON" : "OFF");
-					}
+					MQTT.SendMessage(string.Format("actronque{0}/zone{1}", unit.Serial, iZone), unit.Zones[iZone].State ? "ON" : "OFF");
+					//}
 
 					for (int iIndex = 0; iIndex < bZones.Length; iIndex++)
 					{
@@ -2324,12 +2333,12 @@ namespace HMX.HASSActronQue
 			return _strBaseURL;
 		}
 
-		private static string GetBaseURLCommands(string strDeviceType)
+		private static string GetBaseURLDevice(string strDeviceType)
 		{
 			switch (strDeviceType)
 			{
-				case "nxgen": return _strBaseURLQueCommands;
-				case "neo": return _strBaseURLNeoCommands;
+				case "nxgen": return _strBaseURLQue;
+				case "neo": return _strBaseURLNeo;
 				default: return _strBaseURL;
 			}
 		}

@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2025.7.3] - 2025-07-24
+
+### Changed
+
+- Changed the Que API endpoint to limit dependance on the Neo API endpoint.
+
+### Removed
+
+- Removed event based updates for Que and Neo as Actron have indicated they are no longer available.
+
 ## [v2025.7.2] - 2025-07-16
 
 ### Added

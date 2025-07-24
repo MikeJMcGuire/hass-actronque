@@ -15,7 +15,7 @@ namespace HMX.HASSActronQue
 		public AirConditionerData Data;
 		public Dictionary<int, AirConditionerZone> Zones;	
 		public Dictionary<int, AirConditionerPeripheral> Peripherals;
-		public HttpClient HttpClientCommands;
+		public HttpClient HttpClientCommands, HttpClientStatus;
 
 		public AirConditionerUnit(string strName, string strSerial, string strModelType)
 		{
@@ -34,9 +34,15 @@ namespace HMX.HASSActronQue
 			Peripherals = new Dictionary<int, AirConditionerPeripheral>();
 
 			if (Service.IsDevelopment)
+			{
+				HttpClientStatus = new HttpClient(new LoggingClientHandler(httpClientHandler));
 				HttpClientCommands = new HttpClient(new LoggingClientHandler(httpClientHandler));
+			}
 			else
+			{
+				HttpClientStatus = new HttpClient(httpClientHandler); 
 				HttpClientCommands = new HttpClient(httpClientHandler);
+			}
 		}
 	}
 }
