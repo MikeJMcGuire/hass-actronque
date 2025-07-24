@@ -19,7 +19,7 @@
 		"MQTTLogs": true,
 		"MQTTTLS": false,
 		"PerZoneControls": false,
-		"PollInterval": 30,
+		"PollInterval": 45,
 		"QueUser": "queuser",
 		"QueLogs": true,
 		"QuePassword": "quepassword",

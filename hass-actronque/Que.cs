@@ -55,13 +55,13 @@ namespace HMX.HASSActronQue
 		private static Queue<QueueCommand> _queueCommands = new Queue<QueueCommand>();
 		private static HttpClient _httpClientAuth = null, _httpClient = null;
 		private static int _iCancellationTime = 15; // Seconds
-		private static int _iPollInterval = 30; // Seconds
+		private static int _iPollInterval = 45; // Seconds
 		private static int _iPollIntervalUpdate = 5; // Seconds
 		private static int _iAuthenticationInterval = 60; // Seconds
 		private static int _iQueueInterval = 4; // Seconds
 		private static int _iCommandExpiry = 12; // Seconds
 		//private static int _iPostCommandSleepTimer = 2; // Seconds
-		private static int _iPostCommandSleepTimerNeoNoEventsMode = 10; // Seconds
+		private static int _iPostCommandSleepTimer = 4; // Seconds
 		//private static int _iCommandAckRetryCounter = 3;
 		private static int _iFailedBearerRequests = 0;
 		private static int _iFailedBearerRequestMaximum = 10; // Retries
@@ -1348,17 +1348,17 @@ namespace HMX.HASSActronQue
 						// No Events Mode
 						//else
 						//{
-							Thread.Sleep(_iPostCommandSleepTimerNeoNoEventsMode * 1000);
+						Thread.Sleep(_iPostCommandSleepTimer * 1000);
 
-							foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
+						foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
+						{
+							updateItems = await GetAirConditionerFullStatus(unit);
+							if (updateItems != UpdateItems.None)
 							{
-								updateItems = await GetAirConditionerFullStatus(unit);
-								if (updateItems != UpdateItems.None)
-								{
-									MQTTUpdateData(unit, updateItems);
-									MQTT.Update(null);
-								}
+								MQTTUpdateData(unit, updateItems);
+								MQTT.Update(null);
 							}
+						}
 						//}
 
 						break;
