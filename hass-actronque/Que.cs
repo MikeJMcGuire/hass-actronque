@@ -332,10 +332,7 @@ namespace HMX.HASSActronQue
 
 					_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
 					foreach (AirConditionerUnit unit in _airConditionerUnits.Values)
-					{
-						unit.HttpClientStatus.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
-						unit.HttpClientCommands.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _queToken.BearerToken);
-					}
+						unit.UpdateBearerToken(strResponse);
 
 					// Update Token File
 					try
@@ -525,7 +522,7 @@ namespace HMX.HASSActronQue
 
 						if (_strSerialNumber == "" || _strSerialNumber == strSerial)
 						{
-							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType);
+							unit = new AirConditionerUnit(strDescription.Trim(), strSerial, strType, _queToken.BearerToken);
 							unit.HttpClientStatus.BaseAddress = new Uri(GetBaseURLDevice(strType));
 							unit.HttpClientCommands.BaseAddress = new Uri(GetBaseURLDevice(strType));
 
