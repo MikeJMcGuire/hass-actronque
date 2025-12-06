@@ -514,7 +514,7 @@ namespace HMX.HASSActronQue
 
 							if (strType == "nxgen")
 							{
-								Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Que detected, switching API endpoint and reauthenticating.", lRequestId.ToString("X8"));
+								Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Que detected", lRequestId.ToString("X8"));
 
 								bResetRequired = true;
 							}
@@ -556,8 +556,9 @@ namespace HMX.HASSActronQue
 				goto Cleanup;
 			}
 
-			if (bResetRequired)
+			if (bResetRequired && _airConditionerUnits.Count == 1)
 			{
+				Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}]  Switching API endpoint and reauthenticating.", lRequestId.ToString("X8"));
 				InitialiseHttpClient();
 
 				_eventAuthenticationFailure.Set();
