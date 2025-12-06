@@ -473,7 +473,7 @@ namespace HMX.HASSActronQue
 			string strPageURL = "api/v0/client/ac-systems?includeAcms=true&includeNeo=true";
 			string strResponse;
 			dynamic jsonResponse;
-			bool bRetVal = true;
+			bool bRetVal = true, bResetRequired = false;
 			string strSerial, strDescription, strType;
 
 			Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Base: {1}{2}", lRequestId.ToString("X8"), _httpClient.BaseAddress, strPageURL);
@@ -526,6 +526,13 @@ namespace HMX.HASSActronQue
 
 							_airConditionerUnits.Add(strSerial, unit);
 
+							if (strType == "nxgen")
+							{
+								Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Que detected, switching API endpoint and reauthenticating.", lRequestId.ToString("X8"));
+
+								bResetRequired = true;
+							}
+
 							Logging.WriteDebugLog("Que.GetAirConditionerSerial() [0x{0}] Monitoring AC: {1}", lRequestId.ToString("X8"), strSerial);
 						}
 					}
@@ -561,6 +568,13 @@ namespace HMX.HASSActronQue
 
 				bRetVal = false;
 				goto Cleanup;
+			}
+
+			if (bResetRequired)
+			{
+				ResetHttpClient();
+
+				_eventAuthenticationFailure.Set();
 			}
 
 		Cleanup:
@@ -2324,6 +2338,14 @@ namespace HMX.HASSActronQue
 				case "neo": return _strBaseURLNeo;
 				default: return _strBaseURL;
 			}
+		}
+
+		private static void ResetHttpClient()
+		{
+			Logging.WriteDebugLog("Que.ResetHttpClient()");
+
+			_httpClient.BaseAddress = new Uri(GetBaseURLDevice("nxgen"));
+			_httpClientAuth.BaseAddress = new Uri(GetBaseURLDevice("nxgen"));
 		}
 	}
 }
