@@ -561,6 +561,8 @@ namespace HMX.HASSActronQue
 				InitialiseHttpClient();
 
 				_eventAuthenticationFailure.Set();
+
+				bRetVal = false;
 			}
 
 		Cleanup:
