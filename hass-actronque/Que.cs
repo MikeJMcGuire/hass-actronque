@@ -83,23 +83,9 @@ namespace HMX.HASSActronQue
 
 		static Que()
 		{
-			HttpClientHandler httpClientHandler = new HttpClientHandler();
-
 			Logging.WriteDebugLog("Que.Que()");
 
-			if (httpClientHandler.SupportsAutomaticDecompression)
-				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
-
-			if (Service.IsDevelopment)
-			{
-				_httpClient = new HttpClient(new LoggingClientHandler(httpClientHandler));
-				_httpClientAuth = new HttpClient(new LoggingClientHandler(httpClientHandler));
-			}
-			else
-			{
-				_httpClient = new HttpClient(httpClientHandler);
-				_httpClientAuth = new HttpClient(httpClientHandler);
-			}
+			InitialiseHttpClient();
 		}
 
 		public static async void Initialise(string strQueUser, string strQuePassword, string strSerialNumber, int iPollInterval, bool bQueLogs, bool bPerZoneControls, bool bSeparateHeatCool, ManualResetEvent eventStop)
@@ -572,7 +558,7 @@ namespace HMX.HASSActronQue
 
 			if (bResetRequired)
 			{
-				ResetHttpClient();
+				InitialiseHttpClient();
 
 				_eventAuthenticationFailure.Set();
 			}
@@ -2340,9 +2326,25 @@ namespace HMX.HASSActronQue
 			}
 		}
 
-		private static void ResetHttpClient()
+		private static void InitialiseHttpClient()
 		{
-			Logging.WriteDebugLog("Que.ResetHttpClient()");
+			HttpClientHandler httpClientHandler = new HttpClientHandler();
+			
+			Logging.WriteDebugLog("Que.InitialiseHttpClient()");
+
+			if (httpClientHandler.SupportsAutomaticDecompression)
+				httpClientHandler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+
+			if (Service.IsDevelopment)
+			{
+				_httpClient = new HttpClient(new LoggingClientHandler(httpClientHandler));
+				_httpClientAuth = new HttpClient(new LoggingClientHandler(httpClientHandler));
+			}
+			else
+			{
+				_httpClient = new HttpClient(httpClientHandler);
+				_httpClientAuth = new HttpClient(httpClientHandler);
+			}
 
 			_httpClient.BaseAddress = new Uri(GetBaseURLDevice("nxgen"));
 			_httpClientAuth.BaseAddress = new Uri(GetBaseURLDevice("nxgen"));
