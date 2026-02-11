@@ -2128,7 +2128,7 @@ namespace HMX.HASSActronQue
 			string strFanMode;
 			QueueCommand command = new QueueCommand(lRequestId, unit, DateTime.Now.AddSeconds(_iCommandExpiry));
 
-			Logging.WriteDebugLog("Que.ChangeFanContinuous() [0x{0}] Unit: {1}, Continuous: {2}", lRequestId.ToString("X8"), unit.Serial, bFanContinuous);
+			Logging.WriteDebugLog("Que.ChangeFanContinuous() [0x{0}] Unit: {1}, Continuous: {2}", lRequestId.ToString("X8"), unit.Serial, bFanContinuous ? "On" : "Off");
 
 			strFanMode = unit.Data.FanMode.Split('+')[0];
 			if (bFanContinuous)
