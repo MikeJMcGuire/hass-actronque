@@ -864,6 +864,9 @@ namespace HMX.HASSActronQue
 
 			// Fan Mode
 			ProcessPartialStatus(lRequestId, "UserAirconSettings.FanMode", jsonResponse.UserAirconSettings.FanMode?.ToString(), ref unit.Data.FanMode);
+			
+			// Fan Continuous
+			unit.Data.FanContinuous = unit.Data.FanMode.EndsWith("+CONT");
 
 			// Set Cooling Temperature
 			ProcessPartialStatus(lRequestId, "UserAirconSettings.TemperatureSetpoint_Cool_oC", jsonResponse.UserAirconSettings.TemperatureSetpoint_Cool_oC?.ToString(), ref unit.Data.SetTemperatureCooling);
@@ -1587,6 +1590,7 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}coilinlettemperature/config", strHANameModifier), "{{\"name\":\"{1} Coil Inlet Temperature\",\"unique_id\":\"{0}-CoilInletTemperature\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/coilinlettemperature\",\"unit_of_measurement\":\"\u00B0C\",\"device_class\":\"temperature\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}fanpwm/config", strHANameModifier), "{{\"name\":\"{1} Fan PWM\",\"unique_id\":\"{0}-FanPWM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fanpwm\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}fanrpm/config", strHANameModifier), "{{\"name\":\"{1} Fan RPM\",\"unique_id\":\"{0}-FanRPM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fanrpm\",\"unit_of_measurement\":\"RPM\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+				MQTT.SendMessage(string.Format("homeassistant/switch/actronque{0}fancontinuous/config", strHANameModifier), "{{\"name\":\"{1} Fan Continuous\",\"unique_id\":\"{0}-FanCont\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fancontinuous\",\"command_topic\":\"actronque{3}/fancontinuous/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 
 				if (unit.ModelType == "nxgen")
 				{
@@ -1669,8 +1673,7 @@ namespace HMX.HASSActronQue
 
 			if (items.HasFlag(UpdateItems.Main))
 			{
-				// Fan Mode
-				unit.Data.FanContinuous = unit.Data.FanMode.EndsWith("+CONT");
+				MQTT.SendMessage(string.Format("actronque{0}/fancontinuous", unit.Serial), unit.Data.FanContinuous ? "ON" : "OFF");
 
 				switch (unit.Data.FanMode)
 				{
