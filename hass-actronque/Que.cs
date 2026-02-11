@@ -877,6 +877,12 @@ namespace HMX.HASSActronQue
 			// Control All Zones
 			ProcessPartialStatus(lRequestId, "MasterInfo.ControlAllZones", jsonResponse.MasterInfo.ControlAllZones?.ToString(), ref unit.Data.ControlAllZones);
 
+			// Away Mode
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.AwayMode", jsonResponse.UserAirconSettings.AwayMode?.ToString(), ref unit.Data.AwayMode);
+
+			// Quiet Mode
+			ProcessPartialStatus(lRequestId, "UserAirconSettings.QuietMode", jsonResponse.UserAirconSettings.QuietMode?.ToString(), ref unit.Data.QuietMode);
+
 			// Live Temperature
 			ProcessPartialStatus(lRequestId, "MasterInfo.LiveTemp_oC", jsonResponse.MasterInfo.LiveTemp_oC?.ToString(), ref unit.Data.Temperature);
 
@@ -1591,9 +1597,12 @@ namespace HMX.HASSActronQue
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}fanpwm/config", strHANameModifier), "{{\"name\":\"{1} Fan PWM\",\"unique_id\":\"{0}-FanPWM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fanpwm\",\"unit_of_measurement\":\"%\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 				MQTT.SendMessage(string.Format("homeassistant/sensor/actronque{0}fanrpm/config", strHANameModifier), "{{\"name\":\"{1} Fan RPM\",\"unique_id\":\"{0}-FanRPM\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fanrpm\",\"unit_of_measurement\":\"RPM\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 				MQTT.SendMessage(string.Format("homeassistant/switch/actronque{0}fancontinuous/config", strHANameModifier), "{{\"name\":\"{1} Fan Continuous\",\"unique_id\":\"{0}-FanCont\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/fancontinuous\",\"command_topic\":\"actronque{3}/fancontinuous/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+				MQTT.SendMessage(string.Format("homeassistant/switch/actronque{0}awaymode/config", strHANameModifier), "{{\"name\":\"{1} Away Mode\",\"unique_id\":\"{0}-AwayMode\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/awaymode\",\"command_topic\":\"actronque{3}/awaymode/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
+				MQTT.SendMessage(string.Format("homeassistant/switch/actronque{0}quietmode/config", strHANameModifier), "{{\"name\":\"{1} Quiet Mode\",\"unique_id\":\"{0}-QuietMode\",\"device\":{{\"identifiers\":[\"{0}\"],\"name\":\"{2}\",\"model\":\"Add-On\",\"manufacturer\":\"ActronAir\"}},\"state_topic\":\"actronque{3}/quietmode\",\"command_topic\":\"actronque{3}/quietmode/set\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"availability_topic\":\"{0}/status\"}}", Service.ServiceName.ToLower() + strDeviceNameModifier, strAirConditionerName, strAirConditionerNameMQTT, unit.Serial);
 
 				MQTT.Subscribe("actronque{0}/fancontinuous/set", unit.Serial);
-
+				MQTT.Subscribe("actronque{0}/awaymode/set", unit.Serial);
+				MQTT.Subscribe("actronque{0}/quietmode/set", unit.Serial);
 
 				if (unit.ModelType == "nxgen")
 				{
@@ -1778,6 +1787,12 @@ namespace HMX.HASSActronQue
 
 				// Fan RPM
 				MQTT.SendMessage(string.Format("actronque{0}/fanrpm", unit.Serial), unit.Data.FanRPM.ToString("F0"));
+
+				// Away Mode
+				MQTT.SendMessage(string.Format("actronque{0}/awaymode", unit.Serial), unit.Data.AwayMode ? "ON" : "OFF");
+
+				// Quiet Mode
+				MQTT.SendMessage(string.Format("actronque{0}/quietmode", unit.Serial), unit.Data.QuietMode ? "ON" : "OFF");
 
 				if (unit.ModelType == "nxgen")
 				{
@@ -2058,6 +2073,30 @@ namespace HMX.HASSActronQue
 				default:
 					return;
 			}
+
+			AddCommandToQueue(command);
+		}
+
+		public static void ChangeAwayMode(long lRequestId, AirConditionerUnit unit, bool bState)
+		{
+			QueueCommand command = new QueueCommand(lRequestId, unit, DateTime.Now.AddSeconds(_iCommandExpiry));
+
+			Logging.WriteDebugLog("Que.ChangeAwayMode() [0x{0}] Unit: {1}, Away Mode: {2}", lRequestId.ToString("X8"), unit.Serial, bState ? "On" : "Off");
+
+			command.Data.command.Add("type", "set-settings");
+			command.Data.command.Add("UserAirconSettings.AwayMode", bState);
+
+			AddCommandToQueue(command);
+		}
+
+		public static void ChangeQuietMode(long lRequestId, AirConditionerUnit unit, bool bState)
+		{
+			QueueCommand command = new QueueCommand(lRequestId, unit, DateTime.Now.AddSeconds(_iCommandExpiry));
+
+			Logging.WriteDebugLog("Que.ChangeQuietMode() [0x{0}] Unit: {1}, Away Mode: {2}", lRequestId.ToString("X8"), unit.Serial, bState ? "On" : "Off");
+
+			command.Data.command.Add("type", "set-settings");
+			command.Data.command.Add("UserAirconSettings.QuietMode", bState);
 
 			AddCommandToQueue(command);
 		}
