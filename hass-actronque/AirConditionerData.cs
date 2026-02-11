@@ -8,6 +8,7 @@ namespace HMX.HASSActronQue
 	{
 		public bool ControlAllZones;
 		public string FanMode; // FanMode
+		public bool FanContinuous; // Populated by FanMode
 		public string Mode; // Mode
 		public bool On; // isOn
 		public double SetTemperatureCooling; // TemperatureSetpoint_Cool_oC

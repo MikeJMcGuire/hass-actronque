@@ -1670,6 +1670,8 @@ namespace HMX.HASSActronQue
 			if (items.HasFlag(UpdateItems.Main))
 			{
 				// Fan Mode
+				unit.Data.FanContinuous = unit.Data.FanMode.EndsWith("+CONT");
+
 				switch (unit.Data.FanMode)
 				{
 					case "AUTO":
@@ -2118,31 +2120,48 @@ namespace HMX.HASSActronQue
 			AddCommandToQueue(command);
 		}
 
+		public static void ChangeFanContinuous(long lRequestId, AirConditionerUnit unit, bool bFanContinuous)
+		{
+			string strFanMode;
+			QueueCommand command = new QueueCommand(lRequestId, unit, DateTime.Now.AddSeconds(_iCommandExpiry));
+
+			Logging.WriteDebugLog("Que.ChangeFanContinuous() [0x{0}] Unit: {1}, Continuous: {2}", lRequestId.ToString("X8"), unit.Serial, bFanContinuous);
+
+			strFanMode = unit.Data.FanMode.Split('+')[0];
+			if (bFanContinuous)
+				strFanMode += "+CONT";
+
+			command.Data.command.Add("UserAirconSettings.FanMode", strFanMode);
+			command.Data.command.Add("type", "set-settings");
+
+			AddCommandToQueue(command);
+		}
+
 		public static void ChangeFanMode(long lRequestId, AirConditionerUnit unit, FanMode fanMode)
 		{
-			QueueCommand command = new QueueCommand(lRequestId, unit,DateTime.Now.AddSeconds(_iCommandExpiry));
+			QueueCommand command = new QueueCommand(lRequestId, unit, DateTime.Now.AddSeconds(_iCommandExpiry));
 
 			Logging.WriteDebugLog("Que.ChangeFanMode() [0x{0}] Unit: {1}, Fan Mode: {2}", lRequestId.ToString("X8"), unit.Serial, fanMode.ToString());
 
 			switch (fanMode)
 			{
 				case FanMode.Automatic:
-					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanMode.EndsWith("CONT") ? "AUTO+CONT" : "AUTO");
+					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanContinuous ? "AUTO+CONT" : "AUTO");
 
 					break;
 
 				case FanMode.Low:
-					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanMode.EndsWith("CONT") ? "LOW+CONT" : "LOW");
+					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanContinuous ? "LOW+CONT" : "LOW");
 
 					break;
 
 				case FanMode.Medium:
-					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanMode.EndsWith("CONT") ? "MED+CONT" : "MED");
+					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanContinuous ? "MED+CONT" : "MED");
 
 					break;
 
 				case FanMode.High:
-					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanMode.EndsWith("CONT") ? "HIGH+CONT" : "HIGH");
+					command.Data.command.Add("UserAirconSettings.FanMode", unit.Data.FanContinuous ? "HIGH+CONT" : "HIGH");
 
 					break;
 			}
